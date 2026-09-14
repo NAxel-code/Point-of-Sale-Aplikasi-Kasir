@@ -6,6 +6,7 @@ export interface CartItem {
   price: number
   quantity: number
   stock: number
+  imageUrl?: string
 }
 
 interface CartStore {
@@ -40,7 +41,8 @@ export const useCartStore = create<CartStore>((set, get) => ({
           name: product.name,
           price: product.price,
           quantity: 1,
-          stock: product.stock
+          stock: product.stock,
+          imageUrl: product.imageUrl
         }]
       }
     })

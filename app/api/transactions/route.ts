@@ -4,8 +4,30 @@ import prisma from "@/lib/prisma";
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { cashierId, shiftId, items, paymentAmount } = body;
+    let { cashierId, shiftId, items, paymentAmount, customerName, tableNumber } = body;
     
+    // Fallback for MVP if mock IDs are sent from UI
+    if (cashierId === "mock-cashier-id" || shiftId === "mock-shift-id") {
+      let activeShift = await prisma.shift.findFirst({ where: { status: "OPEN" }, include: { cashier: true } });
+      
+      // If no open shift exists, create a dummy one on the fly so it doesn't crash
+      if (!activeShift) {
+        let user = await prisma.user.findFirst();
+        if (!user) {
+          user = await prisma.user.create({
+            data: { name: 'Mock Kasir', email: `mock${Date.now()}@pos.com`, passwordHash: 'mock', role: 'CASHIER' }
+          });
+        }
+        activeShift = await prisma.shift.create({
+          data: { cashierId: user.id, openingCash: 0, status: 'OPEN' },
+          include: { cashier: true }
+        });
+      }
+
+      cashierId = activeShift.cashierId;
+      shiftId = activeShift.id;
+    }
+
     // Calculate totals
     const subtotal = items.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0);
     const grandTotal = subtotal; // No tax/discount in MVP by default
@@ -23,6 +45,8 @@ export async function POST(request: Request) {
       const newTx = await tx.transaction.create({
         data: {
           receiptNumber,
+          customerName,
+          tableNumber,
           cashierId,
           shiftId,
           subtotal,
