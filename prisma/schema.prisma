@@ -1,0 +1,92 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(uuid())
+  name          String
+  email         String   @unique
+  passwordHash  String
+  role          String   @default("CASHIER") // ADMIN or CASHIER
+  shifts        Shift[]
+  transactions  Transaction[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Category {
+  id        String    @id @default(uuid())
+  name      String
+  products  Product[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Product {
+  id           String              @id @default(uuid())
+  sku          String?             @unique
+  name         String
+  category     Category?           @relation(fields: [categoryId], references: [id])
+  categoryId   String?
+  price        Float
+  stock        Int                 @default(0)
+  isActive     Boolean             @default(true)
+  movements    InventoryMovement[]
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+}
+
+model Shift {
+  id           String        @id @default(uuid())
+  cashier      User          @relation(fields: [cashierId], references: [id])
+  cashierId    String
+  openingCash  Float
+  closingCash  Float?
+  status       String        @default("OPEN") // OPEN or CLOSED
+  transactions Transaction[]
+  openedAt     DateTime      @default(now())
+  closedAt     DateTime?
+}
+
+model Transaction {
+  id             String            @id @default(uuid())
+  receiptNumber  String            @unique
+  cashier        User              @relation(fields: [cashierId], references: [id])
+  cashierId      String
+  shift          Shift             @relation(fields: [shiftId], references: [id])
+  shiftId        String
+  subtotal       Float
+  discount       Float             @default(0)
+  grandTotal     Float
+  paymentAmount  Float
+  change         Float
+  status         String            @default("COMPLETED")
+  items          TransactionItem[]
+  createdAt      DateTime          @default(now())
+}
+
+model TransactionItem {
+  id             String      @id @default(uuid())
+  transaction    Transaction @relation(fields: [transactionId], references: [id])
+  transactionId  String
+  productId      String
+  productName    String
+  productPrice   Float
+  quantity       Int
+  subtotal       Float
+}
+
+model InventoryMovement {
+  id         String   @id @default(uuid())
+  product    Product  @relation(fields: [productId], references: [id])
+  productId  String
+  type       String   // IN or OUT
+  quantity   Int
+  reason     String
+  createdAt  DateTime @default(now())
+}
