@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: 'POS Kasir',
+  title: 'Mr.Coffee POS',
 }
 
 export default function POSLayout({
@@ -24,7 +24,7 @@ export default function POSLayout({
             {/* Bagian Atas: Logo & Menu Utama */}
             <div className="flex flex-col gap-6">
               
-              {/* Logo One Scale */}
+              {/* Logo Mr.Coffee */}
               <div className="flex items-center gap-3 px-2 pt-1">
                 <div className="w-10 h-10 rounded-2xl bg-blue-600 text-white flex items-center justify-center shadow-[0_0_15px_rgba(37,99,235,0.4)] shrink-0">
                   <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -34,7 +34,7 @@ export default function POSLayout({
                   </svg>
                 </div>
                 <div>
-                  <h1 className="font-extrabold text-slate-100 text-base leading-tight tracking-tight">One Scale</h1>
+                  <h1 className="font-extrabold text-slate-100 text-base leading-tight tracking-tight">Mr.Coffee</h1>
                   <p className="text-[10px] text-blue-400 font-semibold tracking-wider uppercase">POS Terminal</p>
                 </div>
               </div>

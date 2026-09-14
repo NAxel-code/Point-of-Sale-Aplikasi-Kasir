@@ -8,8 +8,8 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "POS Kasir",
-  description: "Aplikasi POS Modern",
+  title: "Mr.Coffee POS",
+  description: "Point of Sale Aplikasi Kasir",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
