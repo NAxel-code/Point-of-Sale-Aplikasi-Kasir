@@ -1,36 +1,120 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Point of Sale (POS) Aplikasi Kasir
 
-## Getting Started
+![Next.js](https://img.shields.io/badge/Next.js-15-000000?style=flat-square&logo=next.js&logoColor=white)
+![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=white)
+![Prisma](https://img.shields.io/badge/Prisma-6-2D3748?style=flat-square&logo=prisma&logoColor=white)
+![SQLite](https://img.shields.io/badge/SQLite-003B57?style=flat-square&logo=sqlite&logoColor=white)
+![Tailwind](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white)
 
-First, run the development server:
+Aplikasi Point of Sale (POS) / Kasir modern berbasis web yang dirancang untuk mempercepat proses transaksi, manajemen stok, dan pelaporan untuk bisnis retail/F&B skala kecil dan menengah. 
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Daftar Isi
+
+- [Fitur](#fitur)
+- [Tech Stack](#tech-stack)
+- [Arsitektur](#arsitektur)
+- [Struktur Folder](#struktur-folder)
+- [Environment Variables](#environment-variables)
+- [Instalasi](#instalasi)
+- [API Endpoints](#api-endpoints)
+- [Catatan](#catatan)
+
+## Fitur
+
+**Kasir (Cashier)**
+- Layar POS yang responsif dan dirancang untuk transaksi cepat.
+- Pencarian produk.
+- Manajemen Keranjang (Cart) menggunakan Zustand (state tersimpan di memori lokal untuk kecepatan).
+- Checkout tunai (Cash) dengan kalkulasi kembalian otomatis.
+- Validasi stok secara real-time (produk kosong tidak dapat dijual).
+- Buka & Tutup Shift kasir.
+- Struk cetak (Printable Receipt).
+
+**Admin / Manajer (Upcoming)**
+- Dashboard ringkasan penjualan (Total Sales, Total Transaksi).
+- Manajemen Produk & Kategori (Tambah, Edit, Nonaktifkan).
+- Riwayat Transaksi lengkap.
+- Laporan Histori Pergerakan Stok (Inventory Movement).
+
+## Tech Stack
+
+| Layer | Teknologi |
+|---|---|
+| Frontend | Next.js (App Router), React, Tailwind CSS, shadcn/ui |
+| State Management | Zustand |
+| Backend | Next.js API Routes (Serverless Functions) |
+| Database | SQLite (Dev) / PostgreSQL (Prod) |
+| ORM | Prisma Client |
+
+## Arsitektur
+
+```mermaid
+flowchart LR
+    U[Next.js Client] -->|Fetch API| A[Next.js API Routes]
+    A -->|Prisma ORM| M[(SQLite / PostgreSQL)]
+    U -.->|State Management| Z[Zustand Store]
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Struktur Folder
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
+Point of Sale Aplikasi Kasir/
+├── app/
+│   ├── api/           # Endpoint API (Backend)
+│   ├── admin/         # Halaman Dashboard Admin (WIP)
+│   ├── pos/           # Layar Utama Kasir (POS Screen)
+│   ├── layout.tsx     # Root layout
+│   └── page.tsx       # Root redirect
+├── components/        # Reusable UI components (shadcn & kustom)
+├── lib/               # Utility functions & inisialisasi Prisma
+├── prisma/            # Skema database & script Seeding
+├── store/             # Zustand state management (useCartStore)
+└── ...
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Environment Variables
 
-## Learn More
+**`.env`**
 
-To learn more about Next.js, take a look at the following resources:
+| Variable | Keterangan |
+|---|---|
+| `DATABASE_URL` | Connection string untuk database (Default: `file:./dev.db` untuk SQLite) |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Instalasi
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Prasyarat: Node.js ≥ 18
 
-## Deploy on Vercel
+```bash
+# 1. Install dependencies
+npm install
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+# 2. Setup Database Prisma
+npx prisma generate
+npx prisma db push
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# 3. Masukkan Data Dummy (Seed)
+npx tsx prisma/seed.ts
+
+# 4. Jalankan Development Server
+npm run dev
+```
+
+Aplikasi akan berjalan di `http://localhost:3000`.
+
+## API Endpoints
+
+| Method | Endpoint | Keterangan |
+|---|---|---|
+| GET | `/api/products` | Ambil daftar produk (mendukung query `?search=`) |
+| POST | `/api/products` | Tambah produk baru |
+| GET | `/api/categories` | Ambil daftar kategori produk |
+| POST | `/api/categories` | Tambah kategori baru |
+| GET | `/api/transactions` | Ambil riwayat transaksi |
+| POST | `/api/transactions` | Buat transaksi baru & potong stok (ACID Transaction) |
+| GET | `/api/shifts` | Ambil daftar shift |
+| POST | `/api/shifts` | Buka atau tutup shift |
+
+## Catatan
+
+- Untuk mempermudah proses *development* awal (MVP), database saat ini dikonfigurasi menggunakan **SQLite** (file `dev.db`). Jika akan di-*deploy* ke Production, ubah `provider = "sqlite"` menjadi `provider = "postgresql"` di file `prisma/schema.prisma` dan sesuaikan `DATABASE_URL`.
+- Autentikasi (Login) saat ini belum diimplementasi penuh; flow transaksi masih menggunakan ID Kasir *dummy* (dapat dilihat pada skrip `CheckoutModal.tsx`).
