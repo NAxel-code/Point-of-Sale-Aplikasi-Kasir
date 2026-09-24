@@ -42,3 +42,9 @@ next-env.d.ts
 
 # database
 *.db
+.agents/
+.claude/
+.cursor/
+.devin/
+AGENTS.md
+CLAUDE.md
