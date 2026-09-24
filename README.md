@@ -1,4 +1,4 @@
-# Point of Sale (POS) Aplikasi Kasir
+# Mr.Coffee Point of Sale (POS)
 
 ![Next.js](https://img.shields.io/badge/Next.js-15-000000?style=flat-square&logo=next.js&logoColor=white)
 ![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=white)
@@ -6,7 +6,11 @@
 ![SQLite](https://img.shields.io/badge/SQLite-003B57?style=flat-square&logo=sqlite&logoColor=white)
 ![Tailwind](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white)
 
-Aplikasi Point of Sale (POS) / Kasir modern berbasis web yang dirancang untuk mempercepat proses transaksi, manajemen stok, dan pelaporan untuk bisnis retail/F&B skala kecil dan menengah. 
+<br/>
+<img src="/public/images/ui-preview.png" alt="Mr.Coffee POS UI Preview" width="800"/>
+<br/>
+
+Aplikasi Point of Sale (POS) / Kasir modern berbasis web dengan **Dark Theme** yang elegan, dirancang untuk mempercepat proses transaksi, manajemen stok, dan pelaporan untuk bisnis retail/F&B skala kecil dan menengah. 
 
 ## Daftar Isi
 
