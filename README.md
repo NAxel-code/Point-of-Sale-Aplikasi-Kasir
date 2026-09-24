@@ -6,8 +6,15 @@
 ![SQLite](https://img.shields.io/badge/SQLite-003B57?style=flat-square&logo=sqlite&logoColor=white)
 ![Tailwind](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white)
 
-<br/>
-<img src="/public/images/ui-preview.png" alt="Mr.Coffee POS UI Preview" width="800"/>
+<div align="center">
+  <img src="/public/images/ui-pos.png" alt="Mr.Coffee POS Terminal" width="600"/>
+  <br/>
+  <br/>
+  <div style="display: flex; justify-content: center; gap: 20px;">
+    <img src="/public/images/ui-orders.png" alt="Daftar Pesanan" width="400"/>
+    <img src="/public/images/ui-reports.png" alt="Laporan Kas" width="400"/>
+  </div>
+</div>
 <br/>
 
 Aplikasi Point of Sale (POS) / Kasir modern berbasis web dengan **Dark Theme** yang elegan, dirancang untuk mempercepat proses transaksi, manajemen stok, dan pelaporan untuk bisnis retail/F&B skala kecil dan menengah. 
