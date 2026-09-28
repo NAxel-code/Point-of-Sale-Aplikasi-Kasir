@@ -1,7 +1,8 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { 
   Coffee, 
   Receipt, 
@@ -9,11 +10,20 @@ import {
   Users, 
   BarChart3, 
   Lock,
-  Sparkles,
-  CircleDot
+  Sparkles, 
+  CircleDot,
+  LogOut,
 } from "lucide-react"
 
-const NAV_ITEMS = [
+interface NavItem {
+  label: string;
+  href: string;
+  icon: any;
+  exact?: boolean;
+  adminOnly?: boolean;
+}
+
+const NAV_ITEMS: NavItem[] = [
   {
     label: "Kasir (POS)",
     href: "/pos",
@@ -39,17 +49,66 @@ const NAV_ITEMS = [
     label: "Laporan Kas",
     href: "/pos/reports",
     icon: BarChart3,
+    adminOnly: true,
   },
 ]
 
 export default function Sidebar() {
   const pathname = usePathname()
+  const router = useRouter()
+  const [user, setUser] = useState<{ name: string; role: string; email: string } | null>(null)
+  const [loading, setLoading] = useState(true)
 
-  const isActive = (item: typeof NAV_ITEMS[0]) => {
+  useEffect(() => {
+    fetchSession()
+  }, [])
+
+  const fetchSession = async () => {
+    try {
+      const res = await fetch("/api/auth/me")
+      if (res.ok) {
+        const data = await res.json()
+        if (data.authenticated) {
+          setUser(data.user)
+        } else {
+          router.push("/login")
+        }
+      } else {
+        router.push("/login")
+      }
+    } catch {
+      // ignore
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" })
+    } catch {
+      // ignore
+    } finally {
+      router.push("/login")
+      router.refresh()
+    }
+  }
+
+  const isActive = (item: NavItem) => {
     if (item.exact) {
       return pathname === item.href
     }
     return pathname.startsWith(item.href)
+  }
+
+  const getInitials = (name?: string) => {
+    if (!name) return "KS"
+    return name
+      .split(" ")
+      .map(n => n[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase()
   }
 
   return (
@@ -80,52 +139,72 @@ export default function Sidebar() {
           {NAV_ITEMS.map((item) => {
             const active = isActive(item)
             const Icon = item.icon
+            const isLocked = item.adminOnly && user?.role !== "ADMIN"
+
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`relative flex items-center gap-3.5 px-3.5 py-3 rounded-xl text-xs font-medium transition-all duration-200 group ${
+                className={`relative flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-medium transition-all duration-200 group ${
                   active
                     ? "bg-amber-500/10 text-amber-400 font-semibold shadow-inner"
                     : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/60"
                 }`}
               >
-                {active && (
-                  <span className="absolute left-0 top-2 bottom-2 w-1 rounded-r-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.6)]" />
+                <div className="flex items-center gap-3.5 min-w-0">
+                  {active && (
+                    <span className="absolute left-0 top-2 bottom-2 w-1 rounded-r-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.6)]" />
+                  )}
+                  <Icon
+                    className={`w-4 h-4 shrink-0 transition-transform group-hover:scale-110 ${
+                      active ? "text-amber-400 stroke-[2.4]" : "text-zinc-400 group-hover:text-zinc-200"
+                    }`}
+                  />
+                  <span className="truncate">{item.label}</span>
+                </div>
+
+                {isLocked && (
+                  <span title="Khusus Administrator" className="text-zinc-600 group-hover:text-amber-400 transition">
+                    <Lock className="w-3.5 h-3.5" />
+                  </span>
                 )}
-                <Icon
-                  className={`w-4 h-4 transition-transform group-hover:scale-110 ${
-                    active ? "text-amber-400 stroke-[2.4]" : "text-zinc-400 group-hover:text-zinc-200"
-                  }`}
-                />
-                <span className="truncate">{item.label}</span>
               </Link>
             )
           })}
         </nav>
       </div>
 
-      {/* Bottom Cashier Card */}
+      {/* Bottom Cashier Card & Session Info */}
       <div className="pt-3 border-t border-zinc-900 flex flex-col gap-2.5">
         <div className="p-3 rounded-2xl bg-zinc-900/70 border border-zinc-800/80 flex items-center justify-between">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/30 text-amber-400 font-bold text-xs flex items-center justify-center shrink-0">
-              NC
+            <div className={`w-9 h-9 rounded-xl border text-xs font-bold flex items-center justify-center shrink-0 ${
+              user?.role === "ADMIN" 
+                ? "bg-amber-500/20 border-amber-500/40 text-amber-400"
+                : "bg-emerald-500/20 border-emerald-500/40 text-emerald-400"
+            }`}>
+              {getInitials(user?.name)}
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-semibold text-zinc-200 truncate">Nicholas C.</p>
+              <p className="text-xs font-semibold text-zinc-200 truncate">
+                {user ? user.name : "Memuat..."}
+              </p>
               <div className="flex items-center gap-1.5 mt-0.5">
-                <CircleDot className="w-2.5 h-2.5 text-emerald-400 animate-pulse shrink-0" />
-                <span className="text-[10px] text-zinc-400 font-medium">Shift Pagi</span>
+                <CircleDot className={`w-2.5 h-2.5 ${user?.role === "ADMIN" ? "text-amber-400" : "text-emerald-400"} animate-pulse shrink-0`} />
+                <span className="text-[10px] text-zinc-400 font-medium">
+                  {user ? `Role: ${user.role}` : "Shift Aktif"}
+                </span>
               </div>
             </div>
           </div>
+          
           <button 
             type="button"
-            className="w-8 h-8 rounded-lg text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 flex items-center justify-center transition"
-            title="Kunci Layar Kasir"
+            onClick={handleLogout}
+            className="w-8 h-8 rounded-lg text-zinc-500 hover:text-rose-400 hover:bg-zinc-800 flex items-center justify-center transition"
+            title="Keluar / Ganti Akun Kasir"
           >
-            <Lock className="w-4 h-4" />
+            <LogOut className="w-4 h-4" />
           </button>
         </div>
       </div>

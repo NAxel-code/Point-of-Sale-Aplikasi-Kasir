@@ -1,39 +1,59 @@
 const { PrismaClient } = require('@prisma/client')
+const bcrypt = require('bcryptjs')
 const prisma = new PrismaClient()
 
 async function main() {
   await prisma.inventoryMovement.deleteMany()
   await prisma.transactionItem.deleteMany()
   await prisma.transaction.deleteMany()
+  await prisma.shift.deleteMany()
+  await prisma.session.deleteMany()
   await prisma.product.deleteMany()
   await prisma.category.deleteMany()
-  
-  const admin = await prisma.user.upsert({
+
+  // 1. Password Hashing (Bcrypt Cost 10)
+  const adminPasswordHash = await bcrypt.hash('admin123', 10)
+  const cashierPasswordHash = await bcrypt.hash('kasir123', 10)
+
+  // 2. Seed Admin & Cashier User
+  await prisma.user.upsert({
     where: { email: 'admin@pos.com' },
-    update: {},
+    update: {
+      role: 'ADMIN',
+      passwordHash: adminPasswordHash,
+      failedLoginAttempts: 0,
+      lockoutUntil: null,
+    },
     create: {
-      name: 'Admin Kasir',
+      name: 'Admin Toko',
       email: 'admin@pos.com',
-      passwordHash: 'hashed_password_mock',
+      passwordHash: adminPasswordHash,
       role: 'ADMIN',
     },
   })
 
-  const cashier = await prisma.user.upsert({
+  await prisma.user.upsert({
     where: { email: 'kasir1@pos.com' },
-    update: {},
+    update: {
+      role: 'CASHIER',
+      passwordHash: cashierPasswordHash,
+      failedLoginAttempts: 0,
+      lockoutUntil: null,
+    },
     create: {
       name: 'Kasir Satu',
       email: 'kasir1@pos.com',
-      passwordHash: 'hashed_password_mock',
+      passwordHash: cashierPasswordHash,
       role: 'CASHIER',
     },
   })
 
+  // 3. Seed Categories
   const catKopi = await prisma.category.create({ data: { name: 'Kopi' } })
   const catNonKopi = await prisma.category.create({ data: { name: 'Non Kopi' } })
   const catPastry = await prisma.category.create({ data: { name: 'Pastry' } })
 
+  // 4. Seed Products
   await prisma.product.createMany({
     data: [
       {
@@ -135,7 +155,7 @@ async function main() {
     ]
   })
 
-  console.log('Seeding finished with images.')
+  console.log('Seeding berhasil: Data produk dan akun kasir telah siap.')
 }
 
 main()

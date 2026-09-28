@@ -12,7 +12,10 @@ import {
   Receipt,
   User,
   Hash,
-  Loader2
+  Loader2,
+  Printer,
+  Sparkles,
+  Coffee
 } from "lucide-react"
 
 type PaymentMethod = "CASH" | "QRIS" | "CARD"
@@ -40,6 +43,7 @@ export default function CheckoutModal({
   const [customerName, setCustomerName] = useState(defaultCustomerName)
   const [tableNumber, setTableNumber] = useState(defaultTableNumber)
   const [cardRef, setCardRef] = useState("")
+  const [completedTransaction, setCompletedTransaction] = useState<any>(null)
 
   const cashAmount = method === "CASH" 
     ? (parseInt(cash.replace(/\D/g, '')) || 0)
@@ -48,10 +52,9 @@ export default function CheckoutModal({
   const change = cashAmount - total
   const isSufficient = cashAmount >= total
 
-  // Quick denomination suggestions for Indonesian Rupiah
   const generateQuickAmounts = () => {
     const list = [
-      total, // Uang pas
+      total,
       Math.ceil(total / 10000) * 10000,
       Math.ceil(total / 20000) * 20000,
       Math.ceil(total / 50000) * 50000,
@@ -77,8 +80,6 @@ export default function CheckoutModal({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          cashierId: "mock-cashier-id",
-          shiftId: "mock-shift-id",
           items: cart.items,
           paymentAmount: cashAmount,
           customerName: customerName.trim() || undefined,
@@ -88,12 +89,17 @@ export default function CheckoutModal({
         })
       })
       
+      const data = await res.json().catch(() => ({}))
+
       if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}))
-        throw new Error(errorData.error || "Gagal memproses transaksi")
+        if (res.status === 401) {
+          throw new Error("Sesi kasir telah berakhir. Silakan login kembali.")
+        }
+        throw new Error(data.error || "Gagal memproses transaksi")
       }
       
-      onSuccess()
+      // Simpan data transaksi untuk ditampilkan di Struk Kasir
+      setCompletedTransaction(data)
     } catch (err: any) {
       setError(err.message || "Terjadi kesalahan sistem")
     } finally {
@@ -101,6 +107,144 @@ export default function CheckoutModal({
     }
   }
 
+  const handlePrint = () => {
+    window.print()
+  }
+
+  // TAMPILAN 1: STRUK PEMBAYARAN KASIR (THERMAL RECEIPT PREVIEW)
+  if (completedTransaction) {
+    return (
+      <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+        <div className="bg-zinc-900 border border-zinc-800 rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden flex flex-col max-h-[95vh]">
+          {/* Header */}
+          <div className="p-4 px-5 border-b border-zinc-800 flex justify-between items-center bg-zinc-900">
+            <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs">
+              <CheckCircle2 className="w-4 h-4" />
+              <span>Pembayaran Berhasil</span>
+            </div>
+            <button
+              onClick={onSuccess}
+              className="text-zinc-400 hover:text-white p-1 rounded-lg hover:bg-zinc-800"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Struk Fisik Thermal Paper */}
+          <div className="p-5 overflow-y-auto bg-zinc-950 flex justify-center">
+            <div 
+              id="thermal-receipt" 
+              className="w-full bg-white text-zinc-900 p-5 rounded-xl shadow-lg font-mono text-xs flex flex-col gap-3 select-text"
+            >
+              {/* Header Toko */}
+              <div className="text-center border-b border-dashed border-zinc-400 pb-3">
+                <p className="font-extrabold text-sm uppercase tracking-wider">Mr.Coffee Specialty</p>
+                <p className="text-[10px] text-zinc-600">Jl. Kopi Harapan Bangsa No. 12</p>
+                <p className="text-[10px] text-zinc-500 mt-1">
+                  {new Date(completedTransaction.createdAt).toLocaleString("id-ID", { dateStyle: "short", timeStyle: "short" })}
+                </p>
+                <p className="text-[10px] text-zinc-700 font-bold mt-0.5">
+                  No: {completedTransaction.receiptNumber}
+                </p>
+              </div>
+
+              {/* Info Pelanggan & Kasir */}
+              <div className="text-[10px] border-b border-dashed border-zinc-400 pb-2 flex flex-col gap-0.5 text-zinc-700">
+                <div className="flex justify-between">
+                  <span>Kasir:</span>
+                  <span className="font-bold">{completedTransaction.cashier?.name || "Kasir Satu"}</span>
+                </div>
+                {completedTransaction.customerName && (
+                  <div className="flex justify-between">
+                    <span>Pelanggan:</span>
+                    <span className="font-bold">{completedTransaction.customerName}</span>
+                  </div>
+                )}
+                {completedTransaction.tableNumber && (
+                  <div className="flex justify-between">
+                    <span>Meja:</span>
+                    <span className="font-bold">{completedTransaction.tableNumber}</span>
+                  </div>
+                )}
+                <div className="flex justify-between">
+                  <span>Tipe:</span>
+                  <span>{orderType}</span>
+                </div>
+              </div>
+
+              {/* Daftar Item */}
+              <div className="border-b border-dashed border-zinc-400 pb-3 flex flex-col gap-1.5 text-[11px]">
+                {completedTransaction.items.map((item: any) => (
+                  <div key={item.id} className="flex justify-between items-start">
+                    <div className="pr-2">
+                      <p className="font-semibold text-zinc-950 leading-tight">{item.productName}</p>
+                      <p className="text-[9px] text-zinc-500">
+                        {item.quantity} x Rp {item.productPrice.toLocaleString("id-ID")}
+                      </p>
+                    </div>
+                    <span className="font-bold shrink-0">
+                      Rp {item.subtotal.toLocaleString("id-ID")}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Rincian Pembayaran */}
+              <div className="flex flex-col gap-1 text-[11px] pt-1 border-b border-dashed border-zinc-400 pb-3">
+                <div className="flex justify-between text-zinc-600">
+                  <span>Subtotal</span>
+                  <span>Rp {completedTransaction.subtotal.toLocaleString("id-ID")}</span>
+                </div>
+                <div className="flex justify-between font-extrabold text-xs text-zinc-950 pt-1 border-t border-zinc-300">
+                  <span>TOTAL</span>
+                  <span>Rp {completedTransaction.grandTotal.toLocaleString("id-ID")}</span>
+                </div>
+                <div className="flex justify-between text-[10px] text-zinc-600 pt-1">
+                  <span>Metode Bayar</span>
+                  <span className="font-bold">{completedTransaction.paymentMethod || "CASH"}</span>
+                </div>
+                <div className="flex justify-between text-[10px] text-zinc-600">
+                  <span>Bayar</span>
+                  <span>Rp {completedTransaction.paymentAmount.toLocaleString("id-ID")}</span>
+                </div>
+                <div className="flex justify-between text-[10px] font-bold text-zinc-950">
+                  <span>Kembalian</span>
+                  <span>Rp {completedTransaction.change.toLocaleString("id-ID")}</span>
+                </div>
+              </div>
+
+              {/* Footer Ucapan */}
+              <div className="text-center text-[10px] text-zinc-600 pt-1">
+                <p className="font-semibold">Terima Kasih atas Kunjungan Anda!</p>
+                <p className="text-[9px] text-zinc-400 mt-0.5">Nikmati seduhan kopi terbaik setiap hari.</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="p-4 border-t border-zinc-800 bg-zinc-900 flex gap-2">
+            <button
+              type="button"
+              onClick={handlePrint}
+              className="flex-1 py-3 px-3 rounded-xl border border-zinc-700 hover:border-amber-500 text-zinc-200 hover:text-amber-400 font-bold text-xs flex items-center justify-center gap-2 transition"
+            >
+              <Printer className="w-4 h-4" />
+              <span>Cetak Struk</span>
+            </button>
+            <button
+              type="button"
+              onClick={onSuccess}
+              className="flex-1 py-3 px-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-xs flex items-center justify-center gap-2 transition shadow-md shadow-amber-950/40"
+            >
+              <span>Pesanan Baru</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // TAMPILAN 2: FORM CHECKOUT KASIR
   return (
     <div className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
       <div className="bg-zinc-900 border border-zinc-800 rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
@@ -288,7 +432,6 @@ export default function CheckoutModal({
           {method === "QRIS" && (
             <div className="p-5 rounded-2xl bg-zinc-950/70 border border-zinc-800 text-center flex flex-col items-center gap-3">
               <div className="w-44 h-44 bg-white p-3 rounded-2xl flex flex-col items-center justify-center shadow-lg relative">
-                {/* Simulated QR Code SVG representation */}
                 <div className="w-full h-full bg-zinc-100 border border-zinc-300 rounded-lg p-2 flex flex-col justify-between">
                   <div className="flex justify-between">
                     <div className="w-8 h-8 bg-zinc-950 rounded-sm p-1"><div className="w-full h-full bg-white p-1"><div className="w-full h-full bg-zinc-950" /></div></div>
@@ -357,7 +500,7 @@ export default function CheckoutModal({
                 <span>Memproses Transaksi...</span>
               </>
             ) : (
-              <span>Selesaikan & Cetak Struk</span>
+              <span>Selesaikan & Lihat Struk</span>
             )}
           </button>
         </div>

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { requireAdmin } from "@/lib/auth";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -15,13 +16,23 @@ export async function GET(request: Request) {
     });
     return NextResponse.json(products);
   } catch (error) {
-    return NextResponse.json({ error: "Failed to fetch products" }, { status: 500 });
+    return NextResponse.json({ error: "Gagal mengambil data produk" }, { status: 500 });
   }
 }
 
 export async function POST(request: Request) {
   try {
+    // Hanya Administrator yang berhak menambah / mengubah menu produk
+    const auth = await requireAdmin();
+    if (!auth.authorized) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+
     const body = await request.json();
+    if (!body.name || body.price === undefined || body.stock === undefined) {
+      return NextResponse.json({ error: "Nama, harga, dan stok wajib diisi." }, { status: 400 });
+    }
+
     const product = await prisma.product.create({
       data: {
         name: body.name,
@@ -34,7 +45,7 @@ export async function POST(request: Request) {
     });
     return NextResponse.json(product, { status: 201 });
   } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: "Failed to create product" }, { status: 500 });
+    console.error("Create Product Error:", error);
+    return NextResponse.json({ error: "Gagal menambahkan produk baru" }, { status: 500 });
   }
 }
