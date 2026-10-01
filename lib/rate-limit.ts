@@ -11,7 +11,7 @@ const rateLimitStore = new Map<string, RateLimitRecord>();
 
 // Bersihkan entri kedaluwarsa secara berkala untuk mencegah kebocoran memori
 if (typeof setInterval !== 'undefined') {
-  setInterval(() => {
+  const cleanupTimer = setInterval(() => {
     const now = Date.now();
     for (const [key, record] of rateLimitStore.entries()) {
       if (now > record.resetAt) {
@@ -19,6 +19,9 @@ if (typeof setInterval !== 'undefined') {
       }
     }
   }, 60000);
+  if (cleanupTimer.unref) {
+    cleanupTimer.unref();
+  }
 }
 
 export interface RateLimitResult {
