@@ -3,7 +3,7 @@
 ![Next.js](https://img.shields.io/badge/Next.js-16-000000?style=flat-square&logo=next.js&logoColor=white)
 ![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=white)
 ![Prisma](https://img.shields.io/badge/Prisma-6-2D3748?style=flat-square&logo=prisma&logoColor=white)
-![SQLite](https://img.shields.io/badge/SQLite-003B57?style=flat-square&logo=sqlite&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon-4169E1?style=flat-square&logo=postgresql&logoColor=white)
 ![Tailwind](https://img.shields.io/badge/Tailwind_CSS-4-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white)
 ![Security](https://img.shields.io/badge/Security-Bcrypt%20%7C%20RBAC%20%7C%20RateLimit-emerald?style=flat-square)
 
@@ -103,7 +103,7 @@ Sistem telah dilengkapi data *seeding* akun untuk pengujian:
 | **Library UI** | React 19, Tailwind CSS v4, Lucide Icons |
 | **State Management** | Zustand (Shopping Cart) |
 | **Autentikasi & Keamanan** | Bcryptjs, HttpOnly Secure Cookies, Custom Rate Limiter |
-| **ORM & Database** | Prisma ORM, SQLite (`dev.db`) / PostgreSQL (Production ready) |
+| **ORM & Database** | Prisma ORM, PostgreSQL (Neon Serverless PostgreSQL / Cloud Ready) |
 
 ---
 
@@ -149,19 +149,26 @@ Point of Sale Aplikasi Kasir/
 
 ### Prasyarat
 - Node.js ≥ 20
+- PostgreSQL database instance (contoh: Neon Serverless Postgres atau lokal)
 
 ```bash
 # 1. Pasang dependensi
 npm install
 
-# 2. Sinkronisasi skema database Prisma
+# 2. Siapkan Environment Variables (.env)
+# DATABASE_URL="postgresql://user:password@ep-sample-pooler.neon.tech/neondb?sslmode=require"
+
+# 3. Sinkronisasi skema database Prisma
 npx prisma generate
 npx prisma db push
 
-# 3. Masukkan data awal produk & akun demo kasir
-node prisma/seed.ts
+# 4. Masukkan data awal produk & akun demo kasir
+npx tsx scripts/seed_demo.ts # atau: node prisma/seed.ts
 
-# 4. Jalankan development server
+# 5. Jalankan automated test suite
+npm test
+
+# 6. Jalankan development server
 npm run dev
 ```
 
@@ -188,7 +195,7 @@ Buka peramban di `http://localhost:3000`. Jika belum memiliki sesi aktif, Anda a
 
 ---
 
-## Catatan Produksi
+## Catatan Produksi & Deployment
 
-- Database saat ini menggunakan **SQLite** (`prisma/dev.db`) untuk kemudahan instalasi lokal tanpa perlu konfigurasi database server terpisah.
-- Untuk deployment ke lingkungan produksi (misal: Vercel, VPS, AWS), ubah `provider = "sqlite"` menjadi `provider = "postgresql"` pada file [`prisma/schema.prisma`](file:///c:/Users/User/Documents/Project/Point%20of%20Sale%20Aplikasi%20Kasir/prisma/schema.prisma) dan pasang connection string database PostgreSQL pada environment variable `DATABASE_URL`.
+- Database telah terkonfigurasi menggunakan **PostgreSQL** (`@prisma/client` + `neon` connection pooling ready).
+- Siap di-deploy ke **Vercel** atau platform serverless lainnya. Pastikan mengatur environment variable `DATABASE_URL` di Vercel Dashboard dan script `postinstall: "prisma generate"` akan dieksekusi secara otomatis saat build.
