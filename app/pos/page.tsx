@@ -21,7 +21,8 @@ import {
   AlertTriangle,
   MessageSquare,
   Edit3,
-  Check
+  Check,
+  RotateCcw
 } from "lucide-react"
 
 const CHAGEE_ICE_OPTIONS = [
@@ -302,27 +303,30 @@ export default function POSPage() {
       <main className="flex-1 flex flex-col min-w-0 bg-zinc-950 overflow-hidden">
         
         {/* Top Header Bar */}
-        <header className="h-16 px-6 bg-zinc-950 border-b border-zinc-800/80 flex items-center justify-between shrink-0 z-10">
-          <div className="flex items-center gap-5 text-xs text-zinc-400">
-            <div className="flex items-center gap-2 font-medium">
-              <Calendar className="w-3.5 h-3.5 text-amber-500" />
-              <span>
+        <header className="h-16 px-4 sm:px-6 bg-zinc-950 border-b border-zinc-800/80 flex items-center justify-between shrink-0 z-10 gap-3 min-w-0">
+          <div className="flex items-center gap-3 sm:gap-4 text-xs text-zinc-400 shrink-0 min-w-0">
+            <div className="flex items-center gap-1.5 font-medium">
+              <Calendar className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+              <span className="hidden sm:inline">
                 {currentTime.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
+              </span>
+              <span className="sm:hidden">
+                {currentTime.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
               </span>
             </div>
 
-            <span className="w-1 h-1 rounded-full bg-zinc-700" />
+            <span className="w-1 h-1 rounded-full bg-zinc-700 shrink-0" />
 
-            <div className="flex items-center gap-2 font-medium">
-              <Clock className="w-3.5 h-3.5 text-amber-500" />
+            <div className="flex items-center gap-1.5 font-medium">
+              <Clock className="w-3.5 h-3.5 text-amber-500 shrink-0" />
               <span className="font-semibold text-zinc-200 font-mono">
                 {currentTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
               </span>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="hidden lg:flex items-center gap-1.5 text-[10px] font-mono text-zinc-400 bg-zinc-900 border border-zinc-800 px-2.5 py-1.5 rounded-xl">
+          <div className="flex items-center gap-2.5 shrink-0">
+            <div className="hidden 2xl:flex items-center gap-1.5 text-[10px] font-mono text-zinc-400 bg-zinc-900 border border-zinc-800 px-2.5 py-1.5 rounded-xl">
               <span className="text-zinc-500">Shortcut:</span>
               <kbd className="bg-zinc-950 px-1.5 py-0.5 rounded text-amber-400 border border-zinc-800 font-semibold">F2</kbd>
               <span>Cari</span>
@@ -334,9 +338,10 @@ export default function POSPage() {
               <span>Tutup</span>
             </div>
 
-            <div className="flex items-center gap-2 bg-emerald-950/40 text-emerald-400 px-3 py-1.5 rounded-full border border-emerald-800/40 text-xs font-semibold">
+            <div className="flex items-center gap-2 bg-emerald-950/40 text-emerald-400 px-2.5 sm:px-3 py-1.5 rounded-full border border-emerald-800/40 text-xs font-semibold shrink-0">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Sistem Kasir Aktif</span>
+              <span className="hidden sm:inline">Sistem Kasir Aktif</span>
+              <span className="sm:hidden">Aktif</span>
             </div>
           </div>
         </header>
@@ -417,10 +422,26 @@ export default function POSPage() {
         {/* Product Catalog Grid Container */}
         <div className="flex-1 overflow-y-auto px-6 py-3">
           {filteredProducts.length === 0 ? (
-            <div className="h-64 flex flex-col items-center justify-center text-center text-zinc-500 text-xs gap-2">
+            <div className="h-64 flex flex-col items-center justify-center text-center text-zinc-500 text-xs gap-3">
               <Coffee className="w-10 h-10 stroke-1 text-zinc-600 mb-1" />
-              <p className="font-semibold text-zinc-400">Tidak ada menu yang sesuai</p>
-              <p className="text-[11px] text-zinc-600">Coba ganti kata kunci pencarian atau pilih kategori lain</p>
+              <p className="font-semibold text-zinc-300">
+                {search ? "Tidak ada menu yang sesuai" : "Belum ada produk yang dimuat"}
+              </p>
+              <p className="text-[11px] text-zinc-500 max-w-xs">
+                {search 
+                  ? "Coba ganti kata kunci pencarian atau pilih kategori lain"
+                  : "Silakan periksa koneksi atau klik tombol muat ulang di bawah"}
+              </p>
+              {!search && (
+                <button
+                  type="button"
+                  onClick={() => { fetchProducts(); fetchCategories(); }}
+                  className="px-3.5 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 text-xs font-semibold cursor-pointer transition flex items-center gap-1.5"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>Muat Ulang Menu</span>
+                </button>
+              )}
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3.5 pb-8">
@@ -513,7 +534,7 @@ export default function POSPage() {
       </main>
 
       {/* SISI KANAN: PANEL TIKET PESANAN / ORDER BILL */}
-      <aside className="w-96 bg-zinc-950 border-l border-zinc-800/80 flex flex-col justify-between shrink-0 select-none z-10">
+      <aside className="w-80 lg:w-[340px] xl:w-96 bg-zinc-950 border-l border-zinc-800/80 flex flex-col justify-between shrink-0 select-none z-10">
         
         {/* Header Tiket Order */}
         <div className="h-16 px-5 border-b border-zinc-800/80 flex items-center justify-between shrink-0 bg-zinc-950">

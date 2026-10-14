@@ -120,7 +120,7 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className="w-64 bg-zinc-950 border-r border-zinc-800/80 flex flex-col justify-between p-4 shrink-0 select-none z-20">
+    <aside className="w-56 lg:w-60 xl:w-64 bg-zinc-950 border-r border-zinc-800/80 flex flex-col justify-between p-3.5 sm:p-4 shrink-0 select-none z-20">
       {/* Top Branding & Navigation */}
       <div className="flex flex-col gap-6">
         
