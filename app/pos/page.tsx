@@ -20,21 +20,55 @@ import {
   Hash,
   AlertTriangle,
   MessageSquare,
-  Edit3
+  Edit3,
+  Check
 } from "lucide-react"
 
-const QUICK_CONDIMENTS = [
-  "Less Sugar",
-  "No Sugar",
-  "Less Ice",
-  "No Ice",
-  "Hot / Panas",
-  "Extra Shot",
+const CHAGEE_ICE_OPTIONS = [
+  { label: "Normal Ice", value: "Normal Ice" },
+  { label: "Less Ice", value: "Less Ice" },
+  { label: "No Ice", value: "No Ice" },
+  { label: "Hot", value: "Hot" },
+]
+
+const CHAGEE_SWEETNESS_OPTIONS = [
+  { label: "Normal Sweet", sub: "100%", value: "Normal Sweet" },
+  { label: "Less Sweet", sub: "70%", value: "Less Sweet" },
+  { label: "Slightly Sweet", sub: "50%", value: "Slightly Sweet" },
+  { label: "No Additional Sugar", sub: "0%", value: "No Additional Sugar" },
+]
+
+const DRINK_EXTRAS = [
+  "Fresh Milk",
   "Oat Milk",
+  "Extra Shot",
   "Gula Pisah",
-  "Hangatkan / Toast",
   "Takeaway Cup",
 ]
+
+const PASTRY_TEMP_OPTIONS = [
+  { label: "Hangatkan / Toast", value: "Hangatkan / Toast" },
+  { label: "Suhu Ruang", value: "Suhu Ruang" },
+]
+
+const PASTRY_EXTRAS = [
+  "Extra Butter",
+  "Strawberry Jam",
+  "Gula Pisah",
+  "Takeaway Box",
+]
+
+interface ModifierState {
+  productId: string
+  name: string
+  categoryName?: string
+  iceLevel: string
+  sweetnessLevel: string
+  pastryTemp: string
+  extras: string[]
+  customNote: string
+  isPastry: boolean
+}
 
 export default function POSPage() {
   const [products, setProducts] = useState<any[]>([])
@@ -46,7 +80,7 @@ export default function POSPage() {
   const [tableNumber, setTableNumber] = useState("")
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
   const [currentTime, setCurrentTime] = useState(new Date())
-  const [editingNoteItem, setEditingNoteItem] = useState<{ productId: string; name: string; note: string } | null>(null)
+  const [editingModifier, setEditingModifier] = useState<ModifierState | null>(null)
   
   const searchInputRef = useRef<HTMLInputElement>(null)
   const cart = useCartStore()
@@ -58,8 +92,8 @@ export default function POSPage() {
       const isInput = activeEl?.tagName === "INPUT" || activeEl?.tagName === "TEXTAREA";
 
       if (e.key === "Escape") {
-        if (editingNoteItem) {
-          setEditingNoteItem(null);
+        if (editingModifier) {
+          setEditingModifier(null);
           e.preventDefault();
           return;
         }
@@ -82,7 +116,7 @@ export default function POSPage() {
         return;
       }
 
-      if ((e.key === "F9" || e.code === "Space") && !isInput && !isCheckoutOpen && !editingNoteItem) {
+      if ((e.key === "F9" || e.code === "Space") && !isInput && !isCheckoutOpen && !editingModifier) {
         if (cart.items.length > 0) {
           e.preventDefault();
           setIsCheckoutOpen(true);
@@ -92,7 +126,115 @@ export default function POSPage() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [cart.items.length, isCheckoutOpen, editingNoteItem, search]);
+  }, [cart.items.length, isCheckoutOpen, editingModifier, search]);
+
+  const openModifierModal = (item: { productId: string; name: string; note?: string }) => {
+    const product = products.find((p) => p.id === item.productId)
+    const categoryName = product?.category?.name || ""
+    const isPastry =
+      categoryName.toLowerCase().includes("pastry") ||
+      item.name.toLowerCase().includes("croissant") ||
+      item.name.toLowerCase().includes("pastry") ||
+      item.name.toLowerCase().includes("roti") ||
+      item.name.toLowerCase().includes("danish") ||
+      item.name.toLowerCase().includes("bagel")
+
+    const currentNote = item.note || ""
+
+    let iceLevel = isPastry ? "" : "Normal Ice"
+    let sweetnessLevel = isPastry ? "" : "Normal Sweet"
+    let pastryTemp = isPastry ? "Hangatkan / Toast" : ""
+    let extras: string[] = []
+    let customNote = ""
+
+    if (currentNote) {
+      if (currentNote.includes("No Ice")) iceLevel = "No Ice"
+      else if (currentNote.includes("Less Ice")) iceLevel = "Less Ice"
+      else if (
+        currentNote.includes("Hot / Panas") ||
+        currentNote.includes("Hot") ||
+        currentNote.includes("Panas")
+      ) {
+        iceLevel = "Hot"
+      } else if (currentNote.includes("Normal Ice")) {
+        iceLevel = "Normal Ice"
+      }
+
+      if (
+        currentNote.includes("No Additional Sugar") ||
+        currentNote.includes("No Sugar")
+      ) {
+        sweetnessLevel = "No Additional Sugar"
+      } else if (currentNote.includes("Slightly Sweet")) {
+        sweetnessLevel = "Slightly Sweet"
+      } else if (
+        currentNote.includes("Less Sweet") ||
+        currentNote.includes("Less Sugar")
+      ) {
+        sweetnessLevel = "Less Sweet"
+      } else if (currentNote.includes("Normal Sweet")) {
+        sweetnessLevel = "Normal Sweet"
+      }
+
+      if (currentNote.includes("Suhu Ruang")) {
+        pastryTemp = "Suhu Ruang"
+      } else if (
+        currentNote.includes("Hangatkan / Toast") ||
+        currentNote.includes("Hangatkan")
+      ) {
+        pastryTemp = "Hangatkan / Toast"
+      }
+
+      const allExtras = isPastry ? PASTRY_EXTRAS : DRINK_EXTRAS
+      extras = allExtras.filter((extra) => currentNote.includes(extra))
+
+      let remaining = currentNote
+      const removeKeywords = [
+        "Normal Ice",
+        "Less Ice",
+        "No Ice",
+        "Hot / Panas",
+        "Hot",
+        "Normal Sweet",
+        "Less Sweet",
+        "Slightly Sweet",
+        "No Additional Sugar",
+        "Less Sugar",
+        "No Sugar",
+        "Hangatkan / Toast",
+        "Hangatkan",
+        "Suhu Ruang",
+        ...allExtras,
+      ]
+      for (const kw of removeKeywords) {
+        remaining = remaining.replace(kw, "")
+      }
+      customNote = remaining.replace(/[•,]/g, "").trim()
+    }
+
+    setEditingModifier({
+      productId: item.productId,
+      name: item.name,
+      categoryName,
+      iceLevel,
+      sweetnessLevel,
+      pastryTemp,
+      extras,
+      customNote,
+      isPastry,
+    })
+  }
+
+  const getAssembledNote = (mod: ModifierState): string => {
+    if (mod.isPastry) {
+      return [mod.pastryTemp, ...mod.extras, mod.customNote.trim()]
+        .filter(Boolean)
+        .join(" • ")
+    }
+    return [mod.iceLevel, mod.sweetnessLevel, ...mod.extras, mod.customNote.trim()]
+      .filter(Boolean)
+      .join(" • ")
+  }
 
   useEffect(() => {
     fetchProducts()
@@ -491,7 +633,11 @@ export default function POSPage() {
                           {formatRp(item.price)}
                         </p>
                         {item.note && (
-                          <div className="inline-flex items-center gap-1 mt-1 text-[10px] bg-amber-500/15 border border-amber-500/30 text-amber-300 px-1.5 py-0.5 rounded-md font-medium max-w-full">
+                          <div 
+                            onClick={() => openModifierModal(item)}
+                            className="inline-flex items-center gap-1 mt-1 text-[10px] bg-amber-500/15 border border-amber-500/30 text-amber-300 px-2 py-0.5 rounded-md font-medium max-w-full cursor-pointer hover:bg-amber-500/25 transition"
+                            title="Klik untuk ubah opsi"
+                          >
                             <span className="truncate">"{item.note}"</span>
                             <button
                               type="button"
@@ -499,7 +645,7 @@ export default function POSPage() {
                                 e.stopPropagation();
                                 cart.updateNote(item.productId, "");
                               }}
-                              className="text-zinc-400 hover:text-rose-400 shrink-0 ml-0.5"
+                              className="text-zinc-400 hover:text-rose-400 shrink-0 ml-0.5 cursor-pointer"
                               title="Hapus catatan"
                             >
                               <X className="w-2.5 h-2.5" />
@@ -512,13 +658,13 @@ export default function POSPage() {
                     <div className="flex items-center gap-1">
                       <button
                         type="button"
-                        onClick={() => setEditingNoteItem({ productId: item.productId, name: item.name, note: item.note || "" })}
+                        onClick={() => openModifierModal(item)}
                         className={`p-1 rounded-md transition text-xs cursor-pointer ${
                           item.note 
                             ? "text-amber-400 bg-amber-500/10 hover:bg-amber-500/20" 
                             : "text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800"
                         }`}
-                        title={item.note ? "Ubah Catatan" : "Tambah Catatan/Kondimen"}
+                        title={item.note ? "Ubah Opsi / Catatan" : "Pilih Sugar & Ice Level"}
                       >
                         <Edit3 className="w-3.5 h-3.5" />
                       </button>
@@ -625,92 +771,260 @@ export default function POSPage() {
         />
       )}
 
-      {/* Modal Catatan & Kondimen Menu */}
-      {editingNoteItem && (
+      {/* Modal Kustomisasi Chagee-Style (Ice, Sweetness, Extras) */}
+      {editingModifier && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-in fade-in duration-150">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-3xl w-full max-w-md p-5 flex flex-col gap-4 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-amber-500/15 text-amber-400 border border-amber-500/30 flex items-center justify-center">
-                  <MessageSquare className="w-4 h-4" />
+          <div className="bg-zinc-900 border border-zinc-800 rounded-3xl w-full max-w-lg p-5 sm:p-6 flex flex-col gap-4 shadow-2xl max-h-[90vh]">
+            
+            {/* Header: Judul & Kategori Menu */}
+            <div className="flex items-start justify-between border-b border-zinc-800 pb-3.5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-amber-500/15 text-amber-400 border border-amber-500/30 flex items-center justify-center shrink-0">
+                  <Coffee className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-xs text-zinc-100 truncate">
-                    Catatan Pesanan
+                  <h3 className="font-bold text-sm text-zinc-100 leading-snug">
+                    {editingModifier.name}
                   </h3>
-                  <p className="text-[11px] text-zinc-400 font-medium">{editingNoteItem.name}</p>
+                  <p className="text-[11px] text-zinc-400 font-medium">
+                    {editingModifier.categoryName ? `${editingModifier.categoryName} • ` : ""}
+                    Kustomisasi Opsi Minuman & Rasa
+                  </p>
                 </div>
               </div>
               <button 
                 type="button"
-                onClick={() => setEditingNoteItem(null)} 
-                className="p-1 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800 cursor-pointer transition"
+                onClick={() => setEditingModifier(null)} 
+                className="p-1.5 text-zinc-400 hover:text-white rounded-xl hover:bg-zinc-800 cursor-pointer transition"
+                title="Tutup"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div>
-              <label className="text-[11px] font-semibold text-zinc-300 mb-2 block">
-                Pilihan Cepat Komponen & Kondimen:
-              </label>
-              <div className="flex flex-wrap gap-1.5">
-                {QUICK_CONDIMENTS.map((tag) => {
-                  const currentTags = editingNoteItem.note
-                    ? editingNoteItem.note.split(", ").filter(Boolean)
-                    : [];
-                  const isSelected = currentTags.includes(tag);
+            {/* Scrollable Body */}
+            <div className="overflow-y-auto pr-1 flex flex-col gap-4 text-xs">
+              
+              {!editingModifier.isPastry ? (
+                <>
+                  {/* Section 1: Ice Level */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-bold text-zinc-200">Ice Level</span>
+                      <span className="text-[10px] text-amber-400/90 font-semibold uppercase tracking-wider">
+                        Pilih 1
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                      {CHAGEE_ICE_OPTIONS.map((opt) => {
+                        const isSelected = editingModifier.iceLevel === opt.value
+                        return (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            onClick={() =>
+                              setEditingModifier({ ...editingModifier, iceLevel: opt.value })
+                            }
+                            className={`py-2.5 px-3 rounded-xl text-xs font-semibold text-center transition cursor-pointer border ${
+                              isSelected
+                                ? "bg-amber-500 text-zinc-950 border-amber-500 shadow-md shadow-amber-950/40 font-bold"
+                                : "bg-zinc-950/80 border-zinc-800 text-zinc-300 hover:border-zinc-700 hover:text-white"
+                            }`}
+                          >
+                            {opt.label}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
 
-                  return (
-                    <button
-                      key={tag}
-                      type="button"
-                      onClick={() => {
-                        let updated = [...currentTags];
-                        if (isSelected) {
-                          updated = updated.filter((t) => t !== tag);
-                        } else {
-                          updated.push(tag);
-                        }
-                        setEditingNoteItem({
-                          ...editingNoteItem,
-                          note: updated.join(", "),
-                        });
-                      }}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition cursor-pointer ${
-                        isSelected
-                          ? "bg-amber-500 text-zinc-950 border-amber-500 font-bold"
-                          : "bg-zinc-950 border-zinc-800 text-zinc-300 hover:border-zinc-700 hover:text-zinc-100"
-                      }`}
-                    >
-                      {tag}
-                    </button>
-                  );
-                })}
+                  {/* Section 2: Sweetness Level */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-bold text-zinc-200">Sweetness Level</span>
+                      <span className="text-[10px] text-amber-400/90 font-semibold uppercase tracking-wider">
+                        Pilih 1
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      {CHAGEE_SWEETNESS_OPTIONS.map((opt) => {
+                        const isSelected = editingModifier.sweetnessLevel === opt.value
+                        return (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            onClick={() =>
+                              setEditingModifier({ ...editingModifier, sweetnessLevel: opt.value })
+                            }
+                            className={`py-2.5 px-3 rounded-xl text-xs transition cursor-pointer border flex items-center justify-between ${
+                              isSelected
+                                ? "bg-amber-500 text-zinc-950 border-amber-500 shadow-md shadow-amber-950/40 font-bold"
+                                : "bg-zinc-950/80 border-zinc-800 text-zinc-300 hover:border-zinc-700 hover:text-white font-medium"
+                            }`}
+                          >
+                            <span>{opt.label}</span>
+                            <span
+                              className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${
+                                isSelected
+                                  ? "bg-zinc-950/20 text-zinc-950 font-black"
+                                  : "bg-zinc-900 text-zinc-500"
+                              }`}
+                            >
+                              {opt.sub}
+                            </span>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Section 3: Extras (Susu & Tambahan) */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-bold text-zinc-200">Tambahan (Extras & Milk)</span>
+                      <span className="text-[10px] text-zinc-500 font-semibold uppercase tracking-wider">
+                        Opsional
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {DRINK_EXTRAS.map((extra) => {
+                        const isSelected = editingModifier.extras.includes(extra)
+                        return (
+                          <button
+                            key={extra}
+                            type="button"
+                            onClick={() => {
+                              const updated = isSelected
+                                ? editingModifier.extras.filter((e) => e !== extra)
+                                : [...editingModifier.extras, extra]
+                              setEditingModifier({ ...editingModifier, extras: updated })
+                            }}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition cursor-pointer flex items-center gap-1.5 ${
+                              isSelected
+                                ? "bg-amber-500 text-zinc-950 border-amber-500 font-bold shadow-xs"
+                                : "bg-zinc-950/80 border-zinc-800 text-zinc-300 hover:border-zinc-700 hover:text-white font-medium"
+                            }`}
+                          >
+                            {isSelected ? (
+                              <Check className="w-3.5 h-3.5 stroke-[3]" />
+                            ) : (
+                              <Plus className="w-3.5 h-3.5" />
+                            )}
+                            <span>{extra}</span>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* Pastry Section: Penyajian & Toasting */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-bold text-zinc-200">Penyajian Pastry</span>
+                      <span className="text-[10px] text-amber-400/90 font-semibold uppercase tracking-wider">
+                        Pilih 1
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      {PASTRY_TEMP_OPTIONS.map((opt) => {
+                        const isSelected = editingModifier.pastryTemp === opt.value
+                        return (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            onClick={() =>
+                              setEditingModifier({ ...editingModifier, pastryTemp: opt.value })
+                            }
+                            className={`py-2.5 px-3 rounded-xl text-xs font-semibold text-center transition cursor-pointer border ${
+                              isSelected
+                                ? "bg-amber-500 text-zinc-950 border-amber-500 shadow-md shadow-amber-950/40 font-bold"
+                                : "bg-zinc-950/80 border-zinc-800 text-zinc-300 hover:border-zinc-700 hover:text-white"
+                            }`}
+                          >
+                            {opt.label}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Pastry Section: Extras */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-bold text-zinc-200">Kondimen Pastry</span>
+                      <span className="text-[10px] text-zinc-500 font-semibold uppercase tracking-wider">
+                        Opsional
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {PASTRY_EXTRAS.map((extra) => {
+                        const isSelected = editingModifier.extras.includes(extra)
+                        return (
+                          <button
+                            key={extra}
+                            type="button"
+                            onClick={() => {
+                              const updated = isSelected
+                                ? editingModifier.extras.filter((e) => e !== extra)
+                                : [...editingModifier.extras, extra]
+                              setEditingModifier({ ...editingModifier, extras: updated })
+                            }}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition cursor-pointer flex items-center gap-1.5 ${
+                              isSelected
+                                ? "bg-amber-500 text-zinc-950 border-amber-500 font-bold"
+                                : "bg-zinc-950/80 border-zinc-800 text-zinc-300 hover:border-zinc-700 hover:text-white font-medium"
+                            }`}
+                          >
+                            {isSelected ? (
+                              <Check className="w-3.5 h-3.5 stroke-[3]" />
+                            ) : (
+                              <Plus className="w-3.5 h-3.5" />
+                            )}
+                            <span>{extra}</span>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Section 4: Catatan Khusus Tambahan */}
+              <div>
+                <label className="font-bold text-zinc-200 mb-1.5 block">
+                  Catatan Tambahan Khusus
+                </label>
+                <textarea
+                  rows={2}
+                  value={editingModifier.customNote}
+                  onChange={(e) =>
+                    setEditingModifier({ ...editingModifier, customNote: e.target.value })
+                  }
+                  placeholder="Contoh: Es pisah di cup terpisah, jangan terlalu panas..."
+                  className="w-full p-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-xs text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500 transition resize-none"
+                />
+              </div>
+
+              {/* Section 5: Pratinjau Catatan Tiket */}
+              <div className="bg-zinc-950 border border-zinc-800/80 rounded-2xl p-3 flex flex-col gap-1">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+                  Pratinjau Tiket Pesanan & Struk:
+                </span>
+                <p className="text-xs font-semibold text-amber-400 font-mono">
+                  {getAssembledNote(editingModifier) || "(Tanpa catatan kustom)"}
+                </p>
               </div>
             </div>
 
-            <div>
-              <label className="text-[11px] font-semibold text-zinc-300 mb-1.5 block">
-                Catatan Tambahan Khusus:
-              </label>
-              <textarea
-                rows={2}
-                value={editingNoteItem.note}
-                onChange={(e) =>
-                  setEditingNoteItem({ ...editingNoteItem, note: e.target.value })
-                }
-                placeholder="Contoh: Gula aren dipisah, es sedikit..."
-                className="w-full p-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-xs text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500 transition resize-none"
-              />
-            </div>
-
+            {/* Bottom Actions */}
             <div className="flex gap-2 pt-2 border-t border-zinc-800">
               <button
                 type="button"
                 onClick={() => {
-                  cart.updateNote(editingNoteItem.productId, "");
-                  setEditingNoteItem(null);
+                  cart.updateNote(editingModifier.productId, "")
+                  setEditingModifier(null)
                 }}
                 className="flex-1 py-2.5 rounded-xl border border-zinc-800 text-zinc-400 hover:text-rose-400 hover:bg-zinc-800 text-xs font-semibold transition cursor-pointer"
               >
@@ -719,12 +1033,14 @@ export default function POSPage() {
               <button
                 type="button"
                 onClick={() => {
-                  cart.updateNote(editingNoteItem.productId, editingNoteItem.note);
-                  setEditingNoteItem(null);
+                  const finalNote = getAssembledNote(editingModifier)
+                  cart.updateNote(editingModifier.productId, finalNote)
+                  setEditingModifier(null)
                 }}
-                className="flex-[2] py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-xs transition shadow-md shadow-amber-950/40 cursor-pointer"
+                className="flex-[2] py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-xs transition shadow-md shadow-amber-950/40 cursor-pointer flex items-center justify-center gap-1.5"
               >
-                Simpan Catatan
+                <Check className="w-4 h-4 stroke-[2.5]" />
+                <span>Terapkan Kustomisasi</span>
               </button>
             </div>
           </div>
