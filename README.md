@@ -42,10 +42,16 @@ Aplikasi Point of Sale (POS) / Kasir modern berbasis web dengan **Dark Theme** p
 ### 1. Terminal Kasir (POS Screen)
 - **Katalog Cepat & Tab Kategori**: Filter kategori kopi, non-kopi, pastry, serta fitur pencarian instan dengan navigasi mulus.
 - **Indikator Stok Menipis (*Low Stock Badge*)**: Badge amber berkedip (*pulse*) otomatis muncul saat sisa stok $\le 5$ pcs, dan badge overlay merah saat stok habis (0).
-- **Catatan & Kondimen Menu (*Item Notes / Modifiers*)**:
-  - Tombol cepat kustomisasi per item: *Less Sugar*, *No Sugar*, *Less Ice*, *No Ice*, *Hot / Panas*, *Extra Shot*, *Oat Milk*, *Gula Pisah*, *Hangatkan / Toast*, dan *Takeaway Cup*.
-  - Kotak catatan teks bebas untuk instruksi spesifik pelanggan.
-  - Catatan tersimpan di transaksi dan otomatis tercetak pada struk thermal kasir & barista.
+- **Kustomisasi Opsi Chagee Style (*Sugar & Ice Level Modifiers*)**:
+  - **Ice Level (Single-Select Grid)**: Pilihan terstruktur baris 1 (`Normal Ice`, `Less Ice`, `No Ice`) dan baris 2 (`Hot`).
+  - **Sweetness Level (2x2 Grid)**: Dilengkapi indikator persentase manis khas Chagee: `Normal Sweet (100%)`, `Less Sweet (70%)`, `Slightly Sweet (50%)`, dan `No Additional Sugar (0%)`.
+  - **Tambahan / Extras & Milk (Multi-Select)**: `Fresh Milk`, `Oat Milk`, `Extra Shot`, `Gula Pisah`, dan `Takeaway Cup`.
+  - **Adaptasi Otomatis Menu Pastry**: Mendeteksi menu pastry/bakery secara dinamis dan menyajikan opsi penyajian suhu (`Hangatkan / Toast` vs `Suhu Ruang`) serta kondimen pastry (`Extra Butter`, `Strawberry Jam`, `Takeaway Box`).
+  - **Catatan Khusus & Pratinjau Tiket (*Live Ticket Preview*)**: Kotak teks bebas untuk instruksi spesifik, dilengkapi pratinjau real-time format gabungan (contoh: `Normal Ice • Less Sweet • Oat Milk`) yang langsung tersimpan di keranjang, tercatat di database transaksi, dan otomatis tercetak pada struk thermal.
+- **Desain Responsif & Anti-Tabrakan (*Adaptive Responsive Layout*)**:
+  - **Header Anti-Collision**: Jam, tanggal, dan status kasir terlindungi dari tabrakan saat dibuka pada layar laptop maupun tablet kasir.
+  - **Kolom Proporsional**: Lebar panel tiket pesanan (`w-80 lg:w-[340px] xl:w-96`) dan sidebar disesuaikan agar katalog produk di kolom tengah memiliki ruang yang optimal di berbagai resolusi layar.
+  - **Tombol Muat Ulang Menu (*Catalog Recovery*)**: Tombol cepat untuk memuat ulang katalog secara instan jika terjadi gangguan jaringan sementara.
 - **Manajemen Keranjang (*Zustand Store*)**:
   - **Local Cart Recovery (Anti-Hilang Saat Refresh)**: Menggunakan middleware `persist` ke `localStorage`. Jika tab tidak sengaja ter-refresh, isi keranjang kasir tidak hilang.
 - **Opsi Pesanan Fleksibel**: Mendukung **Dine In** (dengan nomor meja) dan **Take Away**.
