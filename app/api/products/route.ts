@@ -49,3 +49,37 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Gagal menambahkan produk baru" }, { status: 500 });
   }
 }
+
+export async function PATCH(request: Request) {
+  try {
+    const auth = await requireAdmin();
+    if (!auth.authorized) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+
+    const body = await request.json();
+    if (!body.id) {
+      return NextResponse.json({ error: "ID produk wajib disertakan." }, { status: 400 });
+    }
+
+    const updateData: any = {};
+    if (body.name !== undefined) updateData.name = body.name;
+    if (body.sku !== undefined) updateData.sku = body.sku || null;
+    if (body.price !== undefined) updateData.price = parseFloat(body.price);
+    if (body.stock !== undefined) updateData.stock = parseInt(body.stock);
+    if (body.categoryId !== undefined) updateData.categoryId = body.categoryId || null;
+    if (body.isActive !== undefined) updateData.isActive = Boolean(body.isActive);
+
+    const updatedProduct = await prisma.product.update({
+      where: { id: body.id },
+      data: updateData,
+      include: { category: true }
+    });
+
+    return NextResponse.json(updatedProduct);
+  } catch (error) {
+    console.error("Update Product Error:", error);
+    return NextResponse.json({ error: "Gagal memperbarui data produk" }, { status: 500 });
+  }
+}
+

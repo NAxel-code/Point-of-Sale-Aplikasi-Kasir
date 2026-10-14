@@ -1,6 +1,7 @@
 import prisma from "@/lib/prisma"
 import { requireAdmin } from "@/lib/auth"
 import Link from "next/link"
+import ExportCsvButton from "@/components/pos/ExportCsvButton"
 import { 
   TrendingUp, 
   Receipt, 
@@ -11,12 +12,18 @@ import {
   ArrowLeft,
   Banknote,
   QrCode,
-  CreditCard
+  CreditCard,
+  Tag,
+  Calendar
 } from "lucide-react"
 
 export const dynamic = 'force-dynamic'
 
-export default async function ReportsPage() {
+interface PageProps {
+  searchParams: Promise<{ range?: string }>
+}
+
+export default async function ReportsPage(props: PageProps) {
   // Hanya Administrator yang diizinkan melihat rekap omzet & laporan keuangan
   const auth = await requireAdmin();
 
@@ -69,14 +76,35 @@ export default async function ReportsPage() {
     );
   }
 
+  const searchParams = (await props.searchParams) || {};
+  const range = searchParams.range || "ALL";
+
+  let dateFilter: any = undefined;
+  const now = new Date();
+
+  if (range === "TODAY") {
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    dateFilter = { gte: startOfToday };
+  } else if (range === "LAST_7_DAYS") {
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    dateFilter = { gte: sevenDaysAgo };
+  } else if (range === "THIS_MONTH") {
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    dateFilter = { gte: startOfMonth };
+  }
+
   // Hanya hitung transaksi yang COMPLETED (transaksi VOID tidak dihitung)
   const transactions = await prisma.transaction.findMany({
-    where: { status: "COMPLETED" },
+    where: { 
+      status: "COMPLETED",
+      ...(dateFilter ? { createdAt: dateFilter } : {})
+    },
     orderBy: { createdAt: 'desc' },
     include: { items: true, cashier: { select: { name: true } } }
   })
 
   const totalRevenue = transactions.reduce((sum, tx) => sum + tx.grandTotal, 0)
+  const totalDiscount = transactions.reduce((sum, tx) => sum + (tx.discount || 0), 0)
   const totalTransactions = transactions.length
   const averageTicket = totalTransactions > 0 ? Math.round(totalRevenue / totalTransactions) : 0
   
@@ -94,7 +122,7 @@ export default async function ReportsPage() {
   return (
     <div className="flex-1 flex flex-col min-w-0 bg-zinc-950 overflow-y-auto p-6 md:p-8">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div>
           <div className="flex items-center gap-2.5">
             <h1 className="text-2xl font-black text-zinc-100 tracking-tight">Laporan Kas & Penjualan</h1>
@@ -106,15 +134,67 @@ export default async function ReportsPage() {
             </span>
           </div>
           <p className="text-zinc-400 text-xs mt-1">
-            Ringkasan pendapatan bruto, rata-rata transaksi, dan audit aktivitas kasir.
+            Ringkasan pendapatan bruto, rata-rata transaksi, potongan diskon, dan ekspor data kasir.
           </p>
         </div>
 
-        <div className="flex items-center gap-2 bg-zinc-900 border border-zinc-800 px-3.5 py-2 rounded-xl text-xs text-zinc-400">
-          <TrendingUp className="w-4 h-4 text-emerald-400" />
-          <span>Laporan terupdate otomatis secara real-time</span>
+        <div className="flex items-center gap-2.5">
+          <ExportCsvButton transactions={transactions} />
         </div>
       </div>
+
+      {/* Date Filter Bar */}
+      <div className="flex items-center gap-2 mb-6 overflow-x-auto no-scrollbar py-1">
+        <span className="text-xs text-zinc-500 font-semibold flex items-center gap-1.5 mr-1 shrink-0">
+          <Calendar className="w-3.5 h-3.5 text-amber-500" />
+          <span>Periode:</span>
+        </span>
+
+        <Link
+          href="/pos/reports?range=TODAY"
+          className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition cursor-pointer ${
+            range === "TODAY"
+              ? "bg-amber-500 text-zinc-950 font-bold"
+              : "bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-200"
+          }`}
+        >
+          Hari Ini
+        </Link>
+
+        <Link
+          href="/pos/reports?range=LAST_7_DAYS"
+          className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition cursor-pointer ${
+            range === "LAST_7_DAYS"
+              ? "bg-amber-500 text-zinc-950 font-bold"
+              : "bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-200"
+          }`}
+        >
+          7 Hari Terakhir
+        </Link>
+
+        <Link
+          href="/pos/reports?range=THIS_MONTH"
+          className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition cursor-pointer ${
+            range === "THIS_MONTH"
+              ? "bg-amber-500 text-zinc-950 font-bold"
+              : "bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-200"
+          }`}
+        >
+          Bulan Ini
+        </Link>
+
+        <Link
+          href="/pos/reports?range=ALL"
+          className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition cursor-pointer ${
+            range === "ALL"
+              ? "bg-amber-500 text-zinc-950 font-bold"
+              : "bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-200"
+          }`}
+        >
+          Semua Waktu
+        </Link>
+      </div>
+
 
       {/* KPI Stat Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -220,33 +300,57 @@ export default async function ReportsPage() {
             </div>
           </div>
         </div>
+
+        {totalDiscount > 0 && (
+          <div className="p-4 rounded-2xl bg-zinc-900/80 border border-zinc-800 flex items-center justify-between sm:col-span-3">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20 flex items-center justify-center">
+                <Tag className="w-4 h-4" />
+              </div>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Total Potongan Diskon Promosi</p>
+                <p className="text-sm font-bold text-rose-400 font-mono">{formatRp(totalDiscount)}</p>
+              </div>
+            </div>
+            <span className="text-[10px] font-semibold text-zinc-500 bg-zinc-950 px-2.5 py-1 rounded-lg border border-zinc-800">
+              Hemat Pelanggan
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Recent Transactions Table */}
-      <div className="mb-4">
-        <h3 className="font-bold text-zinc-100 text-sm">Aktivitas Transaksi Selesai</h3>
-        <p className="text-zinc-500 text-xs mt-0.5">Audit transaksi sah yang masuk ke kasir</p>
+      <div className="mb-4 flex items-center justify-between">
+        <div>
+          <h3 className="font-bold text-zinc-100 text-sm">Aktivitas Transaksi Selesai</h3>
+          <p className="text-zinc-500 text-xs mt-0.5">Audit transaksi sah yang masuk ke kasir pada periode terpilih</p>
+        </div>
+        <span className="text-xs text-zinc-500 font-medium font-mono">
+          {transactions.length} transaksi
+        </span>
       </div>
 
       <div className="bg-zinc-900/90 border border-zinc-800 rounded-2xl overflow-hidden shadow-sm">
         <table className="w-full text-left text-xs text-zinc-300">
           <thead className="bg-zinc-950/80 border-b border-zinc-800 text-zinc-400 font-semibold uppercase tracking-wider text-[10px]">
             <tr>
-              <th className="px-6 py-4">Nomor Resi</th>
-              <th className="px-6 py-4">Metode</th>
-              <th className="px-6 py-4">Kasir</th>
-              <th className="px-6 py-4">Pelanggan & Meja</th>
-              <th className="px-6 py-4">Item Dipesan</th>
-              <th className="px-6 py-4 text-right">Total Transaksi</th>
+              <th className="px-5 py-3.5">Nomor Resi</th>
+              <th className="px-4 py-3.5">Metode</th>
+              <th className="px-4 py-3.5">Kasir</th>
+              <th className="px-4 py-3.5">Pelanggan & Meja</th>
+              <th className="px-4 py-3.5">Item Dipesan</th>
+              <th className="px-4 py-3.5 text-right">Subtotal</th>
+              <th className="px-4 py-3.5 text-right">Diskon</th>
+              <th className="px-5 py-3.5 text-right">Grand Total</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-800/60">
-            {transactions.slice(0, 10).map((tx) => (
+            {transactions.slice(0, 30).map((tx) => (
               <tr key={tx.id} className="hover:bg-zinc-800/40 transition">
-                <td className="px-6 py-4 font-mono font-bold text-amber-400">
+                <td className="px-5 py-3.5 font-mono font-bold text-amber-400">
                   {tx.receiptNumber}
                 </td>
-                <td className="px-6 py-4">
+                <td className="px-4 py-3.5">
                   <span className={`px-2 py-0.5 rounded text-[10px] font-bold font-mono ${
                     tx.paymentMethod === 'CASH' ? 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/50' :
                     tx.paymentMethod === 'QRIS' ? 'bg-amber-950/60 text-amber-400 border border-amber-800/50' :
@@ -255,30 +359,41 @@ export default async function ReportsPage() {
                     {tx.paymentMethod}
                   </span>
                 </td>
-                <td className="px-6 py-4 text-zinc-300">
+                <td className="px-4 py-3.5 text-zinc-300">
                   {tx.cashier?.name || '-'}
                 </td>
-                <td className="px-6 py-4 font-medium text-zinc-200">
+                <td className="px-4 py-3.5 font-medium text-zinc-200">
                   {tx.customerName || 'Tamu / Umum'} {tx.tableNumber ? `(Meja ${tx.tableNumber})` : ''}
                 </td>
-                <td className="px-6 py-4 text-zinc-400">
+                <td className="px-4 py-3.5 text-zinc-400">
                   {tx.items.reduce((s, i) => s + i.quantity, 0)} item
                 </td>
-                <td className="px-6 py-4 text-right font-black text-zinc-100 font-mono text-sm">
+                <td className="px-4 py-3.5 text-right font-mono text-zinc-400">
+                  {formatRp(tx.subtotal)}
+                </td>
+                <td className="px-4 py-3.5 text-right font-mono">
+                  {tx.discount > 0 ? (
+                    <span className="text-rose-400 font-semibold">- {formatRp(tx.discount)}</span>
+                  ) : (
+                    <span className="text-zinc-600">-</span>
+                  )}
+                </td>
+                <td className="px-5 py-3.5 text-right font-black text-amber-400 font-mono text-sm">
                   {formatRp(tx.grandTotal)}
                 </td>
               </tr>
             ))}
             {transactions.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-6 py-16 text-center text-zinc-500">
-                  Belum ada transaksi tercatat.
+                <td colSpan={8} className="px-6 py-16 text-center text-zinc-500">
+                  Belum ada transaksi pada periode ini.
                 </td>
               </tr>
             )}
           </tbody>
         </table>
       </div>
+
     </div>
   )
 }

@@ -49,6 +49,8 @@ export async function POST(request: Request) {
       subtotal: number;
     }> = [];
 
+    const discount = Math.max(0, parseFloat(body.discount) || 0);
+
     for (const item of items) {
       const dbProduct = productMap.get(item.productId);
 
@@ -81,16 +83,20 @@ export async function POST(request: Request) {
       const itemSubtotal = dbProduct.price * requestedQty;
       calculatedSubtotal += itemSubtotal;
 
+      const rawNote = typeof item.note === 'string' ? item.note.trim() : '';
+      const finalProductName = rawNote ? `${dbProduct.name} (${rawNote})` : dbProduct.name;
+
       validatedItems.push({
         productId: dbProduct.id,
-        productName: dbProduct.name,
+        productName: finalProductName,
         productPrice: dbProduct.price,
         quantity: requestedQty,
         subtotal: itemSubtotal,
       });
     }
 
-    const grandTotal = calculatedSubtotal;
+    const appliedDiscount = Math.min(discount, calculatedSubtotal);
+    const grandTotal = Math.max(0, calculatedSubtotal - appliedDiscount);
     const payment = parseFloat(paymentAmount) || 0;
     const change = payment - grandTotal;
 
@@ -131,6 +137,7 @@ export async function POST(request: Request) {
           cashierId,
           shiftId: activeShift.id,
           subtotal: calculatedSubtotal,
+          discount: appliedDiscount,
           grandTotal,
           paymentMethod: ["CASH", "QRIS", "CARD"].includes(paymentMethod) ? paymentMethod : "CASH",
           paymentAmount: payment,
@@ -146,6 +153,7 @@ export async function POST(request: Request) {
             })),
           },
         },
+
         include: {
           items: true,
           cashier: { select: { name: true } },

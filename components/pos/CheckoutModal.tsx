@@ -15,7 +15,9 @@ import {
   Loader2,
   Printer,
   Sparkles,
-  Coffee
+  Coffee,
+  Tag,
+  Percent
 } from "lucide-react"
 
 type PaymentMethod = "CASH" | "QRIS" | "CARD"
@@ -34,7 +36,7 @@ export default function CheckoutModal({
   orderType?: string
 }) {
   const cart = useCartStore()
-  const total = cart.subtotal()
+  const subtotal = cart.subtotal()
   
   const [method, setMethod] = useState<PaymentMethod>("CASH")
   const [cash, setCash] = useState<string>("")
@@ -45,25 +47,36 @@ export default function CheckoutModal({
   const [cardRef, setCardRef] = useState("")
   const [completedTransaction, setCompletedTransaction] = useState<any>(null)
 
+  // Diskon state
+  const [discountType, setDiscountType] = useState<"NOMINAL" | "PERCENT">("NOMINAL")
+  const [discountVal, setDiscountVal] = useState<string>("")
+
+  const rawDiscount = parseFloat(discountVal.replace(/\D/g, '')) || 0
+  const discountAmount = discountType === "PERCENT"
+    ? Math.round((subtotal * Math.min(100, rawDiscount)) / 100)
+    : Math.min(subtotal, rawDiscount)
+
+  const grandTotal = Math.max(0, subtotal - discountAmount)
+
   const cashAmount = method === "CASH" 
     ? (parseInt(cash.replace(/\D/g, '')) || 0)
-    : total
+    : grandTotal
 
-  const change = cashAmount - total
-  const isSufficient = cashAmount >= total
+  const change = cashAmount - grandTotal
+  const isSufficient = cashAmount >= grandTotal
 
   const generateQuickAmounts = () => {
     const list = [
-      total,
-      Math.ceil(total / 10000) * 10000,
-      Math.ceil(total / 20000) * 20000,
-      Math.ceil(total / 50000) * 50000,
-      Math.ceil(total / 100000) * 100000,
+      grandTotal,
+      Math.ceil(grandTotal / 10000) * 10000,
+      Math.ceil(grandTotal / 20000) * 20000,
+      Math.ceil(grandTotal / 50000) * 50000,
+      Math.ceil(grandTotal / 100000) * 100000,
       50000,
       100000
     ]
     return Array.from(new Set(list))
-      .filter(v => v >= total)
+      .filter(v => v >= grandTotal)
       .sort((a, b) => a - b)
       .slice(0, 4)
   }
@@ -82,6 +95,7 @@ export default function CheckoutModal({
         body: JSON.stringify({
           items: cart.items,
           paymentAmount: cashAmount,
+          discount: discountAmount,
           customerName: customerName.trim() || undefined,
           tableNumber: tableNumber.trim() || undefined,
           paymentMethod: method,
@@ -106,6 +120,7 @@ export default function CheckoutModal({
       setLoading(false)
     }
   }
+
 
   const handlePrint = () => {
     window.print()
@@ -195,6 +210,12 @@ export default function CheckoutModal({
                   <span>Subtotal</span>
                   <span>Rp {completedTransaction.subtotal.toLocaleString("id-ID")}</span>
                 </div>
+                {completedTransaction.discount > 0 && (
+                  <div className="flex justify-between text-rose-600 font-semibold">
+                    <span>Diskon</span>
+                    <span>- Rp {completedTransaction.discount.toLocaleString("id-ID")}</span>
+                  </div>
+                )}
                 <div className="flex justify-between font-extrabold text-xs text-zinc-950 pt-1 border-t border-zinc-300">
                   <span>TOTAL</span>
                   <span>Rp {completedTransaction.grandTotal.toLocaleString("id-ID")}</span>
@@ -277,13 +298,114 @@ export default function CheckoutModal({
           {/* Total Tagihan Card */}
           <div className="shrink-0 bg-gradient-to-b from-zinc-800 to-zinc-900/90 rounded-2xl py-4 px-5 border border-zinc-700/80 text-center relative overflow-hidden shadow-md">
             <div className="absolute top-0 inset-x-0 h-1 bg-amber-500" />
-            <p className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest mb-1">
+            <div className="flex items-center justify-between text-xs text-zinc-400 mb-1">
+              <span>Subtotal: Rp {subtotal.toLocaleString('id-ID')}</span>
+              {discountAmount > 0 && (
+                <span className="text-rose-400 font-semibold font-mono">
+                  Hemat Rp {discountAmount.toLocaleString('id-ID')}
+                </span>
+              )}
+            </div>
+            <p className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest mb-0.5">
               Total yang Harus Dibayar
             </p>
             <p className="text-3xl font-black text-amber-400 tracking-tight font-mono">
-              Rp {total.toLocaleString('id-ID')}
+              Rp {grandTotal.toLocaleString('id-ID')}
             </p>
           </div>
+
+          {/* Diskon / Potongan Harga */}
+          <div className="shrink-0 bg-zinc-950/60 border border-zinc-800 rounded-2xl p-3.5 space-y-2.5">
+            <div className="flex items-center justify-between">
+              <label className="text-[11px] font-semibold text-zinc-300 flex items-center gap-1.5">
+                <Tag className="w-3.5 h-3.5 text-amber-500" />
+                <span>Diskon / Potongan Harga</span>
+              </label>
+              
+              <div className="flex items-center gap-1 bg-zinc-900 p-0.5 rounded-lg border border-zinc-800 text-[10px] font-semibold">
+                <button
+                  type="button"
+                  onClick={() => setDiscountType("NOMINAL")}
+                  className={`px-2 py-0.5 rounded-md transition cursor-pointer ${
+                    discountType === "NOMINAL"
+                      ? "bg-amber-500 text-zinc-950 font-bold"
+                      : "text-zinc-400 hover:text-zinc-200"
+                  }`}
+                >
+                  Rp
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDiscountType("PERCENT")}
+                  className={`px-2 py-0.5 rounded-md transition cursor-pointer ${
+                    discountType === "PERCENT"
+                      ? "bg-amber-500 text-zinc-950 font-bold"
+                      : "text-zinc-400 hover:text-zinc-200"
+                  }`}
+                >
+                  %
+                </button>
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-mono text-zinc-500">
+                  {discountType === "NOMINAL" ? "Rp" : "%"}
+                </span>
+                <input
+                  type="text"
+                  className="w-full pl-9 pr-3 py-2 bg-zinc-900 border border-zinc-800 rounded-xl focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none text-zinc-100 text-xs font-mono placeholder:text-zinc-600 transition"
+                  placeholder={discountType === "NOMINAL" ? "0" : "0 - 100"}
+                  value={discountVal}
+                  onChange={(e) => setDiscountVal(e.target.value.replace(/\D/g, ''))}
+                />
+              </div>
+
+              {discountAmount > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setDiscountVal("")}
+                  className="px-3 py-2 text-[10px] font-semibold text-zinc-400 hover:text-rose-400 bg-zinc-900 border border-zinc-800 rounded-xl hover:border-rose-900/60 transition cursor-pointer"
+                >
+                  Reset
+                </button>
+              )}
+            </div>
+
+            {/* Quick Discount Presets */}
+            <div className="flex flex-wrap gap-1.5 pt-0.5">
+              <button
+                type="button"
+                onClick={() => { setDiscountType("PERCENT"); setDiscountVal("5"); }}
+                className="px-2.5 py-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-[10px] font-medium text-zinc-300 hover:text-amber-400 transition cursor-pointer"
+              >
+                5%
+              </button>
+              <button
+                type="button"
+                onClick={() => { setDiscountType("PERCENT"); setDiscountVal("10"); }}
+                className="px-2.5 py-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-[10px] font-medium text-zinc-300 hover:text-amber-400 transition cursor-pointer"
+              >
+                10%
+              </button>
+              <button
+                type="button"
+                onClick={() => { setDiscountType("NOMINAL"); setDiscountVal("5000"); }}
+                className="px-2.5 py-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-[10px] font-medium text-zinc-300 hover:text-amber-400 transition cursor-pointer"
+              >
+                Rp 5.000
+              </button>
+              <button
+                type="button"
+                onClick={() => { setDiscountType("NOMINAL"); setDiscountVal("10000"); }}
+                className="px-2.5 py-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-[10px] font-medium text-zinc-300 hover:text-amber-400 transition cursor-pointer"
+              >
+                Rp 10.000
+              </button>
+            </div>
+          </div>
+
 
           {/* Info Pelanggan & Meja */}
           <div className="shrink-0 grid grid-cols-2 gap-3">
@@ -392,7 +514,7 @@ export default function CheckoutModal({
                     className="py-2.5 px-3 border border-zinc-800 rounded-xl text-zinc-300 font-semibold text-xs hover:border-amber-500/60 hover:text-amber-400 hover:bg-amber-500/5 transition bg-zinc-950/60 flex items-center justify-between"
                   >
                     <span className="text-[10px] text-zinc-500">
-                      {amount === total ? "Uang Pas" : "Pecahan"}
+                      {amount === grandTotal ? "Uang Pas" : "Pecahan"}
                     </span>
                     <span className="font-mono">Rp {amount.toLocaleString('id-ID')}</span>
                   </button>

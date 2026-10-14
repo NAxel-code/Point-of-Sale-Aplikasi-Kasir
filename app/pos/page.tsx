@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useMemo } from "react"
+import { useEffect, useState, useMemo, useRef } from "react"
 import { useCartStore } from "@/store/useCartStore"
 import CheckoutModal from "@/components/pos/CheckoutModal"
 import { 
@@ -18,8 +18,23 @@ import {
   ArrowRight,
   User,
   Hash,
-  AlertTriangle
+  AlertTriangle,
+  MessageSquare,
+  Edit3
 } from "lucide-react"
+
+const QUICK_CONDIMENTS = [
+  "Less Sugar",
+  "No Sugar",
+  "Less Ice",
+  "No Ice",
+  "Hot / Panas",
+  "Extra Shot",
+  "Oat Milk",
+  "Gula Pisah",
+  "Hangatkan / Toast",
+  "Takeaway Cup",
+]
 
 export default function POSPage() {
   const [products, setProducts] = useState<any[]>([])
@@ -31,8 +46,53 @@ export default function POSPage() {
   const [tableNumber, setTableNumber] = useState("")
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
   const [currentTime, setCurrentTime] = useState(new Date())
+  const [editingNoteItem, setEditingNoteItem] = useState<{ productId: string; name: string; note: string } | null>(null)
   
+  const searchInputRef = useRef<HTMLInputElement>(null)
   const cart = useCartStore()
+
+  // Global Keyboard Shortcuts (F2: Cari, Spasi/F9: Bayar, Esc: Batal)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const activeEl = document.activeElement;
+      const isInput = activeEl?.tagName === "INPUT" || activeEl?.tagName === "TEXTAREA";
+
+      if (e.key === "Escape") {
+        if (editingNoteItem) {
+          setEditingNoteItem(null);
+          e.preventDefault();
+          return;
+        }
+        if (isCheckoutOpen) {
+          setIsCheckoutOpen(false);
+          e.preventDefault();
+          return;
+        }
+        if (search) {
+          setSearch("");
+          e.preventDefault();
+          return;
+        }
+      }
+
+      if (e.key === "F2" || (e.key === "/" && !isInput)) {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+        searchInputRef.current?.select();
+        return;
+      }
+
+      if ((e.key === "F9" || e.code === "Space") && !isInput && !isCheckoutOpen && !editingNoteItem) {
+        if (cart.items.length > 0) {
+          e.preventDefault();
+          setIsCheckoutOpen(true);
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [cart.items.length, isCheckoutOpen, editingNoteItem, search]);
 
   useEffect(() => {
     fetchProducts()
@@ -40,6 +100,7 @@ export default function POSPage() {
     const timer = setInterval(() => setCurrentTime(new Date()), 30000)
     return () => clearInterval(timer)
   }, [search])
+
 
   const fetchProducts = async () => {
     const res = await fetch(`/api/products${search ? `?search=${encodeURIComponent(search)}` : ''}`)
@@ -119,6 +180,18 @@ export default function POSPage() {
           </div>
 
           <div className="flex items-center gap-3">
+            <div className="hidden lg:flex items-center gap-1.5 text-[10px] font-mono text-zinc-400 bg-zinc-900 border border-zinc-800 px-2.5 py-1.5 rounded-xl">
+              <span className="text-zinc-500">Shortcut:</span>
+              <kbd className="bg-zinc-950 px-1.5 py-0.5 rounded text-amber-400 border border-zinc-800 font-semibold">F2</kbd>
+              <span>Cari</span>
+              <span className="text-zinc-600">•</span>
+              <kbd className="bg-zinc-950 px-1.5 py-0.5 rounded text-amber-400 border border-zinc-800 font-semibold">Spasi</kbd>
+              <span>Bayar</span>
+              <span className="text-zinc-600">•</span>
+              <kbd className="bg-zinc-950 px-1.5 py-0.5 rounded text-amber-400 border border-zinc-800 font-semibold">Esc</kbd>
+              <span>Tutup</span>
+            </div>
+
             <div className="flex items-center gap-2 bg-emerald-950/40 text-emerald-400 px-3 py-1.5 rounded-full border border-emerald-800/40 text-xs font-semibold">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               <span>Sistem Kasir Aktif</span>
@@ -133,12 +206,14 @@ export default function POSPage() {
           <div className="relative w-full">
             <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
             <input 
+              ref={searchInputRef}
               type="text" 
-              placeholder="Cari menu kopi, minuman, atau pastry favorit..." 
+              placeholder="Cari menu kopi, minuman, atau pastry favorit... (Tekan / atau F2)" 
               className="w-full pl-10 pr-10 py-2.5 bg-zinc-900/90 border border-zinc-800 rounded-xl text-xs placeholder:text-zinc-500 text-zinc-100 focus:outline-none focus:border-amber-500/80 focus:ring-1 focus:ring-amber-500/40 transition shadow-inner"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
+
             {search && (
               <button 
                 type="button"
@@ -209,7 +284,7 @@ export default function POSPage() {
             <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3.5 pb-8">
               {filteredProducts.map((product: any) => {
                 const isOutOfStock = product.stock === 0
-                const isLowStock = product.stock > 0 && product.stock <= 10
+                const isLowStock = product.stock > 0 && product.stock <= 5
                 const qty = inCartQty[product.id] || 0
 
                 return (
@@ -244,17 +319,18 @@ export default function POSPage() {
 
                         {/* Stock Warning Pill */}
                         {isLowStock && (
-                          <div className="absolute bottom-2 left-2 bg-amber-950/80 border border-amber-600/50 text-amber-300 text-[10px] font-bold px-1.5 py-0.5 rounded-md flex items-center gap-1 backdrop-blur-xs">
-                            <AlertTriangle className="w-3 h-3" />
-                            <span>Sisa {product.stock}</span>
+                          <div className="absolute bottom-2 left-2 bg-amber-950/90 border border-amber-500/80 text-amber-300 text-[10px] font-bold px-1.5 py-0.5 rounded-md flex items-center gap-1 shadow-md shadow-amber-950/50 backdrop-blur-xs">
+                            <AlertTriangle className="w-3 h-3 text-amber-400 animate-pulse" />
+                            <span>Sisa {product.stock} pcs</span>
                           </div>
                         )}
                         {isOutOfStock && (
-                          <div className="absolute inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center text-rose-400 font-bold text-xs uppercase tracking-wider">
+                          <div className="absolute inset-0 bg-black/75 backdrop-blur-xs flex items-center justify-center text-rose-400 font-bold text-xs uppercase tracking-wider">
                             Stok Habis
                           </div>
                         )}
                       </div>
+
 
                       {/* Product Info */}
                       <h3 className="font-semibold text-zinc-100 text-xs leading-snug group-hover:text-amber-400 transition-colors line-clamp-2">
@@ -414,18 +490,49 @@ export default function POSPage() {
                         <p className="text-[10px] text-zinc-400 font-mono">
                           {formatRp(item.price)}
                         </p>
+                        {item.note && (
+                          <div className="inline-flex items-center gap-1 mt-1 text-[10px] bg-amber-500/15 border border-amber-500/30 text-amber-300 px-1.5 py-0.5 rounded-md font-medium max-w-full">
+                            <span className="truncate">"{item.note}"</span>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                cart.updateNote(item.productId, "");
+                              }}
+                              className="text-zinc-400 hover:text-rose-400 shrink-0 ml-0.5"
+                              title="Hapus catatan"
+                            >
+                              <X className="w-2.5 h-2.5" />
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </div>
 
-                    <button 
-                      type="button"
-                      onClick={() => cart.removeItem(item.productId)} 
-                      className="text-zinc-600 hover:text-rose-400 p-1 opacity-60 group-hover:opacity-100 transition"
-                      title="Hapus menu"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => setEditingNoteItem({ productId: item.productId, name: item.name, note: item.note || "" })}
+                        className={`p-1 rounded-md transition text-xs cursor-pointer ${
+                          item.note 
+                            ? "text-amber-400 bg-amber-500/10 hover:bg-amber-500/20" 
+                            : "text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800"
+                        }`}
+                        title={item.note ? "Ubah Catatan" : "Tambah Catatan/Kondimen"}
+                      >
+                        <Edit3 className="w-3.5 h-3.5" />
+                      </button>
+                      <button 
+                        type="button"
+                        onClick={() => cart.removeItem(item.productId)} 
+                        className="text-zinc-600 hover:text-rose-400 p-1 opacity-60 group-hover:opacity-100 transition cursor-pointer"
+                        title="Hapus menu"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
+
 
                   {/* Quantity Stepper & Subtotal */}
                   <div className="flex items-center justify-between pt-1 border-t border-zinc-800/50">
@@ -517,6 +624,113 @@ export default function POSPage() {
           orderType={orderType}
         />
       )}
+
+      {/* Modal Catatan & Kondimen Menu */}
+      {editingNoteItem && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-in fade-in duration-150">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-3xl w-full max-w-md p-5 flex flex-col gap-4 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-amber-500/15 text-amber-400 border border-amber-500/30 flex items-center justify-center">
+                  <MessageSquare className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-xs text-zinc-100 truncate">
+                    Catatan Pesanan
+                  </h3>
+                  <p className="text-[11px] text-zinc-400 font-medium">{editingNoteItem.name}</p>
+                </div>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setEditingNoteItem(null)} 
+                className="p-1 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800 cursor-pointer transition"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div>
+              <label className="text-[11px] font-semibold text-zinc-300 mb-2 block">
+                Pilihan Cepat Komponen & Kondimen:
+              </label>
+              <div className="flex flex-wrap gap-1.5">
+                {QUICK_CONDIMENTS.map((tag) => {
+                  const currentTags = editingNoteItem.note
+                    ? editingNoteItem.note.split(", ").filter(Boolean)
+                    : [];
+                  const isSelected = currentTags.includes(tag);
+
+                  return (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() => {
+                        let updated = [...currentTags];
+                        if (isSelected) {
+                          updated = updated.filter((t) => t !== tag);
+                        } else {
+                          updated.push(tag);
+                        }
+                        setEditingNoteItem({
+                          ...editingNoteItem,
+                          note: updated.join(", "),
+                        });
+                      }}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition cursor-pointer ${
+                        isSelected
+                          ? "bg-amber-500 text-zinc-950 border-amber-500 font-bold"
+                          : "bg-zinc-950 border-zinc-800 text-zinc-300 hover:border-zinc-700 hover:text-zinc-100"
+                      }`}
+                    >
+                      {tag}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div>
+              <label className="text-[11px] font-semibold text-zinc-300 mb-1.5 block">
+                Catatan Tambahan Khusus:
+              </label>
+              <textarea
+                rows={2}
+                value={editingNoteItem.note}
+                onChange={(e) =>
+                  setEditingNoteItem({ ...editingNoteItem, note: e.target.value })
+                }
+                placeholder="Contoh: Gula aren dipisah, es sedikit..."
+                className="w-full p-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-xs text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500 transition resize-none"
+              />
+            </div>
+
+            <div className="flex gap-2 pt-2 border-t border-zinc-800">
+              <button
+                type="button"
+                onClick={() => {
+                  cart.updateNote(editingNoteItem.productId, "");
+                  setEditingNoteItem(null);
+                }}
+                className="flex-1 py-2.5 rounded-xl border border-zinc-800 text-zinc-400 hover:text-rose-400 hover:bg-zinc-800 text-xs font-semibold transition cursor-pointer"
+              >
+                Hapus
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  cart.updateNote(editingNoteItem.productId, editingNoteItem.note);
+                  setEditingNoteItem(null);
+                }}
+                className="flex-[2] py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-xs transition shadow-md shadow-amber-950/40 cursor-pointer"
+              >
+                Simpan Catatan
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }
+

@@ -87,3 +87,15 @@ test('Cart Store: clearCart empties all items', () => {
   assert.strictEqual(useCartStore.getState().items.length, 0);
   assert.strictEqual(useCartStore.getState().subtotal(), 0);
 });
+
+test('Cart Store: updateNote updates notes for an item', () => {
+  const store = useCartStore.getState();
+  store.addItem({ id: 'p1', name: 'Latte', price: 22000, stock: 5 });
+  store.updateNote('p1', 'Less Sugar, Oat Milk');
+
+  assert.strictEqual(useCartStore.getState().items[0].note, 'Less Sugar, Oat Milk');
+
+  // Clearing note with empty string
+  store.updateNote('p1', '   ');
+  assert.strictEqual(useCartStore.getState().items[0].note, undefined);
+});

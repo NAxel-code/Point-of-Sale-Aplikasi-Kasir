@@ -13,6 +13,7 @@ import {
   Sparkles, 
   CircleDot,
   LogOut,
+  Package,
 } from "lucide-react"
 
 interface NavItem {
@@ -46,12 +47,19 @@ const NAV_ITEMS: NavItem[] = [
     icon: Users,
   },
   {
+    label: "Katalog & Stok",
+    href: "/pos/products",
+    icon: Package,
+    adminOnly: true,
+  },
+  {
     label: "Laporan Kas",
     href: "/pos/reports",
     icon: BarChart3,
     adminOnly: true,
   },
 ]
+
 
 export default function Sidebar() {
   const pathname = usePathname()
