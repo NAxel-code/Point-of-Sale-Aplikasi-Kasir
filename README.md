@@ -28,6 +28,7 @@ Aplikasi Point of Sale (POS) / Kasir modern berbasis web dengan **Dark Theme** p
 - [Fitur Utama](#fitur-utama)
 - [Pintasan Keyboard (Speed POS Shortcuts)](#pintasan-keyboard-speed-pos-shortcuts)
 - [Keamanan & Integritas Data](#keamanan--integritas-data)
+- [Log Issue & Resolusi Perbaikan (GitHub Issues)](#log-issue--resolusi-perbaikan)
 - [Akun Pengujian (Demo)](#akun-pengujian-demo)
 - [Tech Stack](#tech-stack)
 - [Struktur Folder](#struktur-folder)
@@ -122,6 +123,21 @@ Sistem ini menerapkan standar keamanan aplikasi kasir:
    - Pemeriksaan role (`ADMIN` vs `CASHIER`) dilakukan secara ketat pada Server Components dan API Routes, bukan sekadar menyembunyikan tombol di UI.
 7. **Prepared Statements**:
    - Seluruh kueri ke database menggunakan Prisma Client parameterized queries untuk mencegah serangan SQL Injection.
+
+---
+
+## Log Issue & Resolusi Perbaikan
+
+Seluruh riwayat issue, kebutuhan fitur, dan perbaikan bug tercatat secara rinci pada dokumen [ISSUES_AND_FIXES.md](ISSUES_AND_FIXES.md) serta terhubung dengan [GitHub Issues](https://github.com/NAxel-code/Point-of-Sale-Aplikasi-Kasir/issues):
+
+| No | GitHub Issue | Kategori | Status | Commit Referensi |
+|---|---|---|---|---|
+| #1 | [Autentikasi Backend, RBAC, Rate Limiting, & Integritas Harga](https://github.com/NAxel-code/Point-of-Sale-Aplikasi-Kasir/issues/1) | Security | **Resolved** | `d6bffa1` |
+| #2 | [Migrasi Database ke Neon PostgreSQL Serverless & Vercel](https://github.com/NAxel-code/Point-of-Sale-Aplikasi-Kasir/issues/2) | Database | **Resolved** | `71d30b1` |
+| #3 | [Local Cart Persistence, Item Modifiers, Diskon, & Struk Thermal](https://github.com/NAxel-code/Point-of-Sale-Aplikasi-Kasir/issues/3) | Operations | **Resolved** | `0575d27` |
+| #4 | [Katalog & Restok Admin serta Laporan Omzet dengan Ekspor CSV](https://github.com/NAxel-code/Point-of-Sale-Aplikasi-Kasir/issues/4) | Finance / Ops | **Resolved** | `0575d27` |
+| #5 | [Revamp Sugar & Ice Level Opsi Pesanan Gaya Mobile Chagee](https://github.com/NAxel-code/Point-of-Sale-Aplikasi-Kasir/issues/5) | Ordering UX | **Resolved** | `473f100` |
+| #6 | [Perbaikan Tabrakan Elemen Header & Lebar Kolom Responsif Laptop](https://github.com/NAxel-code/Point-of-Sale-Aplikasi-Kasir/issues/6) | Bugfix / UI | **Resolved** | `2270044` |
 
 ---
 
