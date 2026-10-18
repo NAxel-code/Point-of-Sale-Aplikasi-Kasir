@@ -1,29 +1,85 @@
 # Mr.Coffee Point of Sale (POS)
 
-![Next.js](https://img.shields.io/badge/Next.js-16-000000?style=flat-square&logo=next.js&logoColor=white)
-![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=white)
-![Prisma](https://img.shields.io/badge/Prisma-6-2D3748?style=flat-square&logo=prisma&logoColor=white)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon-4169E1?style=flat-square&logo=postgresql&logoColor=white)
-![Tailwind](https://img.shields.io/badge/Tailwind_CSS-4-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white)
-![Security](https://img.shields.io/badge/Security-Bcrypt%20%7C%20RBAC%20%7C%20RateLimit-emerald?style=flat-square)
-![Tests](https://img.shields.io/badge/Tests-38%20Passed-brightgreen?style=flat-square)
-
 <div align="center">
-  <img src="/public/images/ui-pos.png" alt="Mr.Coffee POS Terminal" width="600"/>
-  <br/>
-  <br/>
-  <div style="display: flex; justify-content: center; gap: 20px;">
-    <img src="/public/images/ui-orders.png" alt="Daftar Pesanan" width="400"/>
-    <img src="/public/images/ui-reports.png" alt="Laporan Kas" width="400"/>
-  </div>
-</div>
-<br/>
 
-Aplikasi Point of Sale (POS) / Kasir modern berbasis web dengan **Dark Theme** premium, dirancang khusus untuk mempercepat proses transaksi kasir, manajemen inventaris, rekonsiliasi kas, dan pelaporan keuangan bisnis F&B / retail skala kecil hingga menengah.
+![Next.js](https://img.shields.io/badge/Next.js-16.3.5-000000?style=for-the-badge&logo=next.js&logoColor=white)
+![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=white)
+![Prisma](https://img.shields.io/badge/Prisma-6.4.1-2D3748?style=for-the-badge&logo=prisma&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon_Serverless-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.0-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
+![Security](https://img.shields.io/badge/Security-Bcrypt_Cost_10_%7C_RBAC_%7C_RateLimit-emerald?style=for-the-badge)
+![Tests](https://img.shields.io/badge/Tests-38%20Passed-brightgreen?style=for-the-badge)
+
+<p align="center">
+  <strong>Aplikasi Kasir (Point of Sale) Modern Berbasis Web dengan Desain Premium Dark-Theme, Kustomisasi Menu Ala Chagee, Manajemen Diskon, Pelaporan Finansial Real-Time, & Sistem Keamanan Terpadu.</strong>
+</p>
+
+</div>
 
 ---
 
-## Daftar Isi
+## 🎬 Video Hands-On & Demonstrasi Aplikasi
+
+Tonton rekaman video demonstrasi alur operasional aplikasi kasir Mr.Coffee POS secara nyata (mulai dari login kasir, pemesanan minuman dengan kustomisasi gula & es ala Chagee, pemilihan diskon, transaksi pembayaran, hingga manajemen produk dan pelaporan omzet admin):
+
+<div align="center">
+  <video src="public/videos/hands_on_aplikasi_kasir_pos.mp4" controls width="100%" style="max-width: 860px; border-radius: 12px; border: 1px solid #27272a; box-shadow: 0 20px 30px rgba(0,0,0,0.5);">
+    Browser Anda tidak mendukung tag video HTML5. Silakan unduh atau putar video melalui tautan langsung di bawah ini.
+  </video>
+  <br/><br/>
+  <p>
+    🔗 <strong>Tautan Berkas Video:</strong> 
+    <a href="public/videos/hands_on_aplikasi_kasir_pos.mp4">▶ <strong>Tonton / Unduh Video Hands-On (Full Demo MP4)</strong></a>
+    &nbsp;&nbsp;|&nbsp;&nbsp;
+    <a href="public/videos/MrCoffee_POS_Video_Overview.mp4">▶ <strong>Tonton Video Overview POS</strong></a>
+  </p>
+</div>
+
+---
+
+## 🖼️ Galeri Bukti Tampilan Antarmuka Terbaru (UI Showcase)
+
+Berikut adalah tangkapan layar antarmuka terbaru (*high-DPI display*) yang mencerminkan pembaruan layout responsif, kustomisasi Chagee-style, diskon, restok admin, dan laporan keuangan:
+
+### 1. Terminal Kasir Utama & Grid Menu (Layout Responsif Anti-Tabrakan)
+Halaman operasional harian kasir dilengkapi pencarian cepat, filter kategori, badge stok menipis, jam real-time anti-tabrakan, dan panel tiket pesanan interaktif.
+<p align="center">
+  <img src="public/images/ui-pos.png" alt="Terminal Kasir Utama Mr.Coffee POS" width="900" style="border-radius: 10px; border: 1px solid #27272a;"/>
+</p>
+
+### 2. Kustomisasi Opsi Minuman Gaya Mobile Chagee (Ice & Sweetness Levels)
+Modal kustomisasi kondimen dengan sistem single-select grid untuk Ice Level (`Normal`, `Less`, `No Ice`, `Hot`), Sweetness Level berpersentase (`100%`, `70%`, `50%`, `0%`), multi-select extras (`Oat Milk`, `Fresh Milk`, `Extra Shot`), adaptasi menu pastry (toasting/room temp), dan live preview catatan struk.
+<p align="center">
+  <img src="public/images/ui-modifier.png" alt="Modal Kustomisasi Sugar dan Ice Level Chagee Style" width="900" style="border-radius: 10px; border: 1px solid #27272a;"/>
+</p>
+
+### 3. Modal Pembayaran & Potongan Diskon Instan (Checkout Modal)
+Dukungan metode pembayaran Tunai, QRIS, dan EDC, perhitungan kembalian otomatis, serta preset tombol diskon cepat (`5%`, `10%`, `Rp 5.000`, `Rp 10.000`) atau nominal kustom dengan output cetak struk thermal standar 58mm/80mm.
+<p align="center">
+  <img src="public/images/ui-checkout.png" alt="Modal Checkout dan Diskon Instan" width="900" style="border-radius: 10px; border: 1px solid #27272a;"/>
+</p>
+
+### 4. Manajemen Produk & Restok Cepat Inventaris (Khusus Admin)
+Halaman admin `/pos/products` untuk mengelola katalog menu, sakelar aktif/non-aktif penjualan, tombol restok instan `+10` / `+50`, serta pencatatan otomatis mutasi stok ke riwayat inventaris.
+<p align="center">
+  <img src="public/images/ui-products.png" alt="Manajemen Produk dan Restok Inventaris" width="900" style="border-radius: 10px; border: 1px solid #27272a;"/>
+</p>
+
+### 5. Laporan Finansial & Ekspor Data CSV (Khusus Admin)
+Dashboard rekap omzet harian/mingguan/bulanan, breakdown pendapatan per metode pembayaran (Cash, QRIS, EDC), rekap potongan promosi diskon, serta tombol ekspor laporan berformat `.csv` (kompatibel penuh dengan Microsoft Excel via UTF-8 BOM).
+<p align="center">
+  <img src="public/images/ui-reports.png" alt="Laporan Finansial dan Ekspor CSV" width="900" style="border-radius: 10px; border: 1px solid #27272a;"/>
+</p>
+
+### 6. Riwayat Pesanan & Pembatalan Transaksi (Void)
+Pemantauan transaksi kasir secara terperinci dengan pengembalian stok barang otomatis (*auto-restock*) ketika pesanan di-void karena salah input.
+<p align="center">
+  <img src="public/images/ui-orders.png" alt="Riwayat Pesanan dan Pembatalan Void" width="900" style="border-radius: 10px; border: 1px solid #27272a;"/>
+</p>
+
+---
+
+## 📑 Daftar Isi
 
 - [Fitur Utama](#fitur-utama)
 - [Pintasan Keyboard (Speed POS Shortcuts)](#pintasan-keyboard-speed-pos-shortcuts)
@@ -31,7 +87,7 @@ Aplikasi Point of Sale (POS) / Kasir modern berbasis web dengan **Dark Theme** p
 - [Log Issue & Resolusi Perbaikan (GitHub Issues)](#log-issue--resolusi-perbaikan)
 - [Akun Pengujian (Demo)](#akun-pengujian-demo)
 - [Tech Stack](#tech-stack)
-- [Struktur Folder](#struktur-folder)
+- [Struktur Folder Proyek](#struktur-folder-proyek)
 - [Instalasi & Menjalankan](#instalasi--menjalankan)
 - [Daftar API Endpoints](#daftar-api-endpoints)
 - [Catatan Produksi & Deployment](#catatan-produksi--deployment)
@@ -40,14 +96,14 @@ Aplikasi Point of Sale (POS) / Kasir modern berbasis web dengan **Dark Theme** p
 
 ## Fitur Utama
 
-### 1. Terminal Kasir (POS Screen)
+### 1. Terminal Kasir Lapangan (POS Terminal)
 - **Katalog Cepat & Tab Kategori**: Filter kategori kopi, non-kopi, pastry, serta fitur pencarian instan dengan navigasi mulus.
 - **Indikator Stok Menipis (*Low Stock Badge*)**: Badge amber berkedip (*pulse*) otomatis muncul saat sisa stok $\le 5$ pcs, dan badge overlay merah saat stok habis (0).
 - **Kustomisasi Opsi Chagee Style (*Sugar & Ice Level Modifiers*)**:
   - **Ice Level (Single-Select Grid)**: Pilihan terstruktur baris 1 (`Normal Ice`, `Less Ice`, `No Ice`) dan baris 2 (`Hot`).
   - **Sweetness Level (2x2 Grid)**: Dilengkapi indikator persentase manis khas Chagee: `Normal Sweet (100%)`, `Less Sweet (70%)`, `Slightly Sweet (50%)`, dan `No Additional Sugar (0%)`.
   - **Tambahan / Extras & Milk (Multi-Select)**: `Fresh Milk`, `Oat Milk`, `Extra Shot`, `Gula Pisah`, dan `Takeaway Cup`.
-  - **Adaptasi Otomatis Menu Pastry**: Mendeteksi menu pastry/bakery secara dinamis dan menyajikan opsi penyajian suhu (`Hangatkan / Toast` vs `Suhu Ruang`) serta kondimen pastry (`Extra Butter`, `Strawberry Jam`, `Takeaway Box`).
+  - **Adaptasi Otomatis Menu Pastry**: Mendeteksi menu pastry/bakery secara dinamis dan menyajikan opsi suhu penyajian (`Hangatkan / Toast` vs `Suhu Ruang`) serta kondimen pastry (`Extra Butter`, `Strawberry Jam`, `Takeaway Box`).
   - **Catatan Khusus & Pratinjau Tiket (*Live Ticket Preview*)**: Kotak teks bebas untuk instruksi spesifik, dilengkapi pratinjau real-time format gabungan (contoh: `Normal Ice • Less Sweet • Oat Milk`) yang langsung tersimpan di keranjang, tercatat di database transaksi, dan otomatis tercetak pada struk thermal.
 - **Desain Responsif & Anti-Tabrakan (*Adaptive Responsive Layout*)**:
   - **Header Anti-Collision**: Jam, tanggal, dan status kasir terlindungi dari tabrakan saat dibuka pada layar laptop maupun tablet kasir.
@@ -150,24 +206,24 @@ Sistem telah dilengkapi data *seeding* akun untuk pengujian:
 | **ADMIN** | `admin@pos.com` | `admin123` | Akses penuh (Kasir, Katalog & Stok Admin, Laporan Kas & Omzet) |
 | **CASHIER** | `kasir1@pos.com` | `kasir123` | Operasional kasir (POS, Pesanan, Meja). Akses ke Katalog & Laporan diblokir (403). |
 
-> *Tips:* Pada halaman login (`/login`), terdapat tombol **1-Click Login** untuk beralih antara akun Admin dan Kasir secara instan.
+> *Tips:* Pada halaman login (`/login`), terdapat tombol **1-Click Login** untuk beralih antara akun Admin dan Kasir secara instan tanpa perlu mengetik manual.
 
 ---
 
 ## Tech Stack
 
-| Layer | Teknologi |
-|---|---|
-| **Framework** | Next.js 16 (App Router, Turbopack, Server Components) |
-| **Library UI** | React 19, Tailwind CSS v4, Lucide Icons |
-| **State Management** | Zustand dengan LocalStorage Persistence |
-| **Autentikasi & Keamanan** | Bcryptjs, HttpOnly Secure Cookies, Custom Rate Limiter |
-| **ORM & Database** | Prisma ORM, PostgreSQL (Neon Serverless PostgreSQL / Cloud Ready) |
-| **Automated Testing** | Node.js Test Runner + tsx (38 passing tests) |
+| Layer | Teknologi | Deskripsi |
+|---|---|---|
+| **Framework** | Next.js 16.3.5 (App Router, Turbopack, Server Actions/Components) | Fullstack React framework terkini |
+| **Library UI** | React 19, Tailwind CSS v4, Lucide Icons | Desain responsif bertema dark modern |
+| **State Management** | Zustand (dengan middleware `persist` ke `localStorage`) | State keranjang belanja anti-hilang saat refresh |
+| **Autentikasi & Keamanan** | Bcryptjs, HttpOnly Secure Cookies, Custom In-Memory Rate Limiter | Standar keamanan login & proteksi brute-force |
+| **Database & ORM** | Prisma ORM 6.4.1, PostgreSQL (Neon Serverless Connection Pooling) | Database cloud-ready dengan transaksi atomik |
+| **Automated Testing** | Node.js Test Runner + tsx | 38 skenario test otomatis lulus 100% |
 
 ---
 
-## Struktur Folder
+## Struktur Folder Proyek
 
 ```
 Point of Sale Aplikasi Kasir/
@@ -179,14 +235,14 @@ Point of Sale Aplikasi Kasir/
 │   │   │   └── restock/     # Endpoint restok inventaris cepat (POST)
 │   │   ├── shifts/          # Endpoint buka/tutup shift & rekap kas
 │   │   └── transactions/    # Endpoint transaksi, diskon, & void pesanan
-│   ├── login/               # Halaman autentikasi terminal kasir
+│   ├── login/               # Halaman autentikasi terminal kasir (1-Click demo switcher)
 │   ├── pos/
 │   │   ├── customers/       # Data loyalitas pelanggan
 │   │   ├── orders/          # Riwayat pesanan & aksi void
 │   │   ├── products/        # Halaman manajemen produk & stok (khusus Admin)
 │   │   ├── reports/         # Laporan omzet, filter tanggal & ekspor CSV (khusus Admin)
 │   │   ├── tables/          # Manajemen nomor meja
-│   │   └── page.tsx         # Layar utama katalog kasir POS
+│   │   └── page.tsx         # Layar utama katalog kasir POS & Chagee modifiers
 │   ├── icon.svg             # Logo favicon SVG tab browser
 │   ├── favicon.ico          # Favicon multi-resolusi
 │   ├── layout.tsx           # Root layout dengan konfigurasi metadata icons
@@ -198,17 +254,28 @@ Point of Sale Aplikasi Kasir/
 │       └── Sidebar.tsx         # Navigasi kasir dengan status role
 ├── lib/
 │   ├── auth.ts              # Helper autentikasi, sesi cookie, & RBAC backend
-│   ├── prisma.ts            # Singleton Prisma Client
+│   ├── prisma.ts            # Singleton Prisma Client (Neon pooler compatible)
 │   └── rate-limit.ts        # Rate limiter anti-brute force
 ├── prisma/
 │   ├── schema.prisma        # Skema database (User, Shift, Transaction, dll)
 │   └── seed.ts              # Script seeding data awal
+├── public/
+│   ├── images/              # Bukti tangkapan layar tampilan terbaru aplikasi
+│   │   ├── ui-pos.png
+│   │   ├── ui-modifier.png
+│   │   ├── ui-checkout.png
+│   │   ├── ui-products.png
+│   │   ├── ui-reports.png
+│   │   └── ui-orders.png
+│   └── videos/              # Berkas video hands-on demonstrasi aplikasi
+│       ├── hands_on_aplikasi_kasir_pos.mp4
+│       └── MrCoffee_POS_Video_Overview.mp4
 ├── scripts/
 │   ├── generate_favicon.py  # Generator ikon favicon multi-resolusi
 │   └── seed_demo.ts         # Script seeding transaksi demo
 ├── store/
 │   └── useCartStore.ts      # Store keranjang belanja kasir (persisted)
-└── tests/                   # Automated unit & integration tests (38 tests)
+└── tests/                   # Automated unit & integration tests (38 passing tests)
 ```
 
 ---
@@ -217,7 +284,7 @@ Point of Sale Aplikasi Kasir/
 
 ### Prasyarat
 - Node.js ≥ 20
-- PostgreSQL database instance (contoh: Neon Serverless Postgres atau lokal)
+- PostgreSQL database instance (contoh: Neon Serverless Postgres atau PostgreSQL lokal)
 
 ```bash
 # 1. Pasang dependensi
@@ -268,4 +335,4 @@ Buka peramban di `http://localhost:3000`. Jika belum memiliki sesi aktif, Anda a
 ## Catatan Produksi & Deployment
 
 - Database telah terkonfigurasi menggunakan **PostgreSQL** (`@prisma/client` + `neon` connection pooling ready).
-- Siap di-deploy ke **Vercel** atau platform serverless lainnya. Pastikan mengatur environment variable `DATABASE_URL` di Vercel Dashboard dan script `postinstall: "prisma generate"` akan dieksekusi secara otomatis saat build.
+- Siap di-deploy ke **Vercel** atau platform serverless lainnya. Pastikan mengatur environment variable `DATABASE_URL` di Vercel Dashboard dan script `postinstall: "prisma generate"` akan dieksekusi secara otomatis saat proses build.
